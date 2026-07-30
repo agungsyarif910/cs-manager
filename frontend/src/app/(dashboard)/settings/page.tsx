@@ -280,7 +280,11 @@ export default function SettingsPage() {
                   </div>
                   <div className="space-y-2">
                     <Label>Phone Number ID</Label>
-                    <Input value={waConfig.phoneNumberId} onChange={e => setWaConfig({...waConfig, phoneNumberId: e.target.value})} />
+                    <Input value={waConfig.phoneNumberId} onChange={e => setWaConfig({...waConfig, phoneNumberId: e.target.value})} placeholder="Dari KirimDev Dashboard → Device" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Phone Number (format: 628xxx)</Label>
+                    <Input value={waConfig.phoneNumber || ''} onChange={e => setWaConfig({...waConfig, phoneNumber: e.target.value})} placeholder="628123456789" />
                   </div>
                   <div className="space-y-2">
                     <Label>Webhook Secret</Label>
