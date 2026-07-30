@@ -1,16 +1,25 @@
 {
   "version": 2,
-  "buildCommand": "npm install && npx prisma generate && npm run build",
+  "installCommand": "npm install && npx prisma generate",
   "builds": [
     {
       "src": "api/index.ts",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "maxLambdaSize": "50mb",
+        "includeFiles": ["prisma/**", "node_modules/.prisma/**", "node_modules/@prisma/**"]
+      }
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "api/index.ts"
+      "dest": "api/index.ts",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,PATCH,OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Kirim-Signature"
+      }
     },
     {
       "src": "/(.*)",

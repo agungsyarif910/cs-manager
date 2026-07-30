@@ -2,27 +2,34 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import express from 'express';
+import * as express from 'express';
 
 const server = express();
-let app: any;
+let cachedApp: any = null;
 
 async function bootstrap() {
-  if (!app) {
-    const nestApp = await NestFactory.create(AppModule, new ExpressAdapter(server));
-    nestApp.enableCors({
-      origin: true,
-      credentials: true,
-    });
-    nestApp.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
-    nestApp.setGlobalPrefix('api');
-    await nestApp.init();
-    app = nestApp;
-  }
+  if (cachedApp) return server;
+  
+  const app = await NestFactory.create(AppModule, new ExpressAdapter(server), {
+    logger: ['error', 'warn'],
+  });
+  
+  app.enableCors({
+    origin: true,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Kirim-Signature'],
+  });
+  
+  app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
+  app.setGlobalPrefix('api');
+  
+  await app.init();
+  cachedApp = app;
   return server;
 }
 
-export default async (req: any, res: any) => {
-  const serverInstance = await bootstrap();
-  serverInstance(req, res);
+module.exports = async (req: any, res: any) => {
+  const app = await bootstrap();
+  app(req, res);
 };
