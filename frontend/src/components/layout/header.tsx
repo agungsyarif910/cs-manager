@@ -54,7 +54,7 @@ export function Header() {
           <DropdownMenuContent align="end">
             <DropdownMenuItem>Profile</DropdownMenuItem>
             <DropdownMenuItem>Settings</DropdownMenuItem>
-            <DropdownMenuItem onClick={logout} className="text-destructive">
+            <DropdownMenuItem onClick={() => { logout(); window.location.href = '/login'; }} className="text-destructive">
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>
