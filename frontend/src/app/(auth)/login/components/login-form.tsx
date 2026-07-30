@@ -2,55 +2,66 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth-store";
+import api from "@/lib/api";
 
-interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {}
-
-const formSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-});
-
-export function LoginForm({ className, ...props }: UserAuthFormProps) {
+export function LoginForm({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = React.useState<boolean>(false);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
   const { login } = useAuthStore();
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
     setIsLoading(true);
+    setError("");
 
-    setTimeout(() => {
-      setIsLoading(false);
-      login("fake-token-123", { id: "1", name: "Admin User", email: "admin@example.com", role: "admin" });
-      toast.success("Successfully logged in");
+    try {
+      const res = await api.post("/auth/login", { email, password });
+      const { accessToken, user } = res.data;
+      
+      // Save REAL token from backend
+      login(accessToken, {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      });
+      
       router.push("/");
-    }, 1000);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err.message;
+      setError(msg === "Unauthorized" ? "Email atau password salah" : msg);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
-    <div className={cn("grid gap-6", className)} {...props}>
+    <div className={className} {...props}>
       <form onSubmit={onSubmit}>
         <div className="grid gap-4">
+          {error && (
+            <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm">
+              ❌ {error}
+            </div>
+          )}
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
-              placeholder="name@example.com"
+              placeholder="admin@example.com"
               type="email"
-              autoCapitalize="none"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
-              autoCorrect="off"
               disabled={isLoading}
+              required
             />
           </div>
           <div className="grid gap-2">
@@ -58,7 +69,10 @@ export function LoginForm({ className, ...props }: UserAuthFormProps) {
             <Input
               id="password"
               type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               disabled={isLoading}
+              required
             />
           </div>
           <Button disabled={isLoading}>
