@@ -6,8 +6,9 @@ function getTokenFromCookie(): string | null {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
+// Use same-domain API routes (/api/...) - no external backend needed!
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api',
+  baseURL: '/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -15,7 +16,6 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
-    // Try localStorage first, then cookie
     const token = localStorage.getItem('access_token') || getTokenFromCookie();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

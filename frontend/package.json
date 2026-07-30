@@ -6,11 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^16.6.0",
     "@hookform/resolvers": "^3.3.4",
+    "@prisma/client": "^5.22.0",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-avatar": "^1.0.4",
     "@radix-ui/react-checkbox": "^1.0.4",
@@ -29,10 +31,12 @@
     "@tanstack/react-query": "^5.28.4",
     "@tanstack/react-table": "^8.13.2",
     "axios": "^1.6.8",
+    "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
+    "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.363.0",
     "next": "14.1.4",
     "next-themes": "^0.3.0",
@@ -48,6 +52,8 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
@@ -55,6 +61,7 @@
     "eslint": "^8",
     "eslint-config-next": "14.1.4",
     "postcss": "^8",
+    "prisma": "^5.22.0",
     "tailwindcss": "^3.3.0",
     "typescript": "^5"
   }
