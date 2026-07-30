@@ -20,18 +20,17 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      try {
-        // Handle refresh token logic here if needed
-        // For now, redirect to login
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('access_token');
-          window.location.href = '/login';
-        }
-      } catch (refreshError) {
-        return Promise.reject(refreshError);
+    // Only redirect to login for 401 errors on non-settings endpoints
+    // and only if we haven't already retried
+    if (error.response?.status === 401) {
+      const url = error.config?.url || '';
+      const isAuthEndpoint = url.includes('/auth/');
+      
+      // Don't redirect for auth endpoints (login itself) or if already retrying
+      if (!isAuthEndpoint && !error.config?._retry) {
+        error.config._retry = true;
+        // Don't auto-redirect, let the page handle the error
+        console.warn('API returned 401 for:', url);
       }
     }
     return Promise.reject(error);
