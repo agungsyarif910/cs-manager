@@ -92,7 +92,7 @@ export default function SettingsPage() {
     setMessage("");
     try {
       const token = localStorage.getItem('access_token') || document.cookie.match(/auth_token=([^;]*)/)?.[1] || '';
-      await api.put(`/settings/${key}`, { value: data }, {
+      await api.put(`/settings?key=${key}`, { value: data }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMessage(`✅ ${section} berhasil disimpan!`);
