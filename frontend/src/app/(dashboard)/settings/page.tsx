@@ -38,6 +38,7 @@ export default function SettingsPage() {
     apiUrl: "https://api.kirimdev.com/v1",
     apiKey: "",
     phoneNumberId: "",
+    phoneNumber: "",
     webhookSecret: "",
     webhookUrl: "",
   });
