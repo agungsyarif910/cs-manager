@@ -91,11 +91,16 @@ export default function SettingsPage() {
     setSaving(key);
     setMessage("");
     try {
-      await api.put(`/settings/${key}`, { value: data });
+      const token = localStorage.getItem('access_token') || document.cookie.match(/auth_token=([^;]*)/)?.[1] || '';
+      await api.put(`/settings/${key}`, { value: data }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setMessage(`✅ ${section} berhasil disimpan!`);
       setTimeout(() => setMessage(""), 3000);
     } catch (err: any) {
-      setMessage(`❌ Gagal menyimpan: ${err?.response?.data?.message || err.message}`);
+      const detail = err?.response?.data?.message || err.message;
+      const status = err?.response?.status || 'unknown';
+      setMessage(`❌ Gagal menyimpan (${status}): ${detail}`);
     } finally {
       setSaving("");
     }
