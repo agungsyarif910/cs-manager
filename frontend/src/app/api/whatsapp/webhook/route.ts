@@ -75,11 +75,38 @@ export async function POST(request: NextRequest) {
     if (aiProvider) {
       try {
         const aiAgent = await prisma.aiAgent.findFirst({ where: { companyId, isActive: true } });
+        
+        // RAG: Search knowledge base for relevant context
+        let knowledgeContext = '';
+        try {
+          const keywords = messageText.toLowerCase().split(/\s+/).filter((w: string) => w.length > 2);
+          if (keywords.length > 0) {
+            const chunks = await prisma.documentChunk.findMany({
+              where: {
+                document: { companyId },
+                OR: keywords.map((kw: string) => ({ content: { contains: kw, mode: 'insensitive' as any } }))
+              },
+              take: 5,
+              orderBy: { chunkIndex: 'asc' }
+            });
+            if (chunks.length > 0) {
+              knowledgeContext = '\n\n=== KNOWLEDGE BASE (gunakan info ini untuk menjawab) ===\n' +
+                chunks.map((c: any) => c.content).join('\n---\n') +
+                '\n=== END KNOWLEDGE BASE ===';
+            }
+          }
+        } catch (kbErr: any) {
+          console.error('KB search error:', kbErr.message);
+        }
+
+        const basePrompt = aiAgent?.systemPrompt || aiProvider.systemPrompt || 'Kamu adalah AI Customer Service yang ramah dan membantu. Jawab dalam Bahasa Indonesia dengan singkat dan jelas.';
+        const systemPrompt = basePrompt + knowledgeContext;
+
         const recentMessages = await prisma.message.findMany({
           where: { conversationId: conversation.id }, orderBy: { createdAt: 'desc' }, take: 10
         });
         const messages = [
-          { role: 'system', content: aiAgent?.systemPrompt || aiProvider.systemPrompt || 'Kamu adalah AI Customer Service yang ramah dan membantu. Jawab dalam Bahasa Indonesia dengan singkat dan jelas.' },
+          { role: 'system', content: systemPrompt },
           ...recentMessages.reverse().map((m: any) => ({
             role: m.direction === 'INBOUND' ? 'user' : 'assistant',
             content: m.content
