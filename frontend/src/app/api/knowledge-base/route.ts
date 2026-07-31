@@ -2,26 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getUser, unauthorized } from '@/lib/auth-helper';
 
-// Polyfill for pdf-parse in serverless (no browser APIs)
-if (typeof globalThis.DOMMatrix === 'undefined') {
-  (globalThis as any).DOMMatrix = class DOMMatrix {
-    constructor() { return this; }
-    m11 = 1; m12 = 0; m13 = 0; m14 = 0;
-    m21 = 0; m22 = 1; m23 = 0; m24 = 0;
-    m31 = 0; m32 = 0; m33 = 1; m34 = 0;
-    m41 = 0; m42 = 0; m43 = 0; m44 = 1;
-    a = 1; b = 0; c = 0; d = 1; e = 0; f = 0;
-    is2D = true; isIdentity = true;
-    inverse() { return new DOMMatrix(); }
-    multiply() { return new DOMMatrix(); }
-    scale() { return new DOMMatrix(); }
-    translate() { return new DOMMatrix(); }
-    transformPoint() { return { x: 0, y: 0, z: 0, w: 1 }; }
-  };
-}
-if (typeof globalThis.Path2D === 'undefined') {
-  (globalThis as any).Path2D = class Path2D { constructor() {} };
-}
 // GET: List all documents
 export async function GET(request: NextRequest) {
   const user = getUser(request);
@@ -68,9 +48,10 @@ export async function POST(request: NextRequest) {
     let textContent = '';
 
     if (mimeType === 'application/pdf' || filename.endsWith('.pdf')) {
-      const pdfParse = require('pdf-parse');
-      const pdfData = await pdfParse(buffer);
-      textContent = pdfData.text;
+      // Use unpdf (works in serverless/edge)
+      const { extractText } = await import('unpdf');
+      const { text } = await extractText(new Uint8Array(buffer));
+      textContent = text;
     } else if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || filename.endsWith('.docx')) {
       const mammoth = require('mammoth');
       const result = await mammoth.extractRawText({ buffer });
