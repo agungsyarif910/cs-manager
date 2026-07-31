@@ -48,15 +48,15 @@ export async function POST(request: NextRequest) {
     let textContent = '';
 
     if (mimeType === 'application/pdf' || filename.endsWith('.pdf')) {
-      const pdfParse = (await import('pdf-parse')).default;
+      const pdfParse = require('pdf-parse');
       const pdfData = await pdfParse(buffer);
       textContent = pdfData.text;
     } else if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || filename.endsWith('.docx')) {
-      const mammoth = await import('mammoth');
+      const mammoth = require('mammoth');
       const result = await mammoth.extractRawText({ buffer });
       textContent = result.value;
     } else if (mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || filename.endsWith('.xlsx') || filename.endsWith('.xls') || filename.endsWith('.csv')) {
-      const XLSX = await import('xlsx');
+      const XLSX = require('xlsx');
       const workbook = XLSX.read(buffer, { type: 'buffer' });
       const allText: string[] = [];
       workbook.SheetNames.forEach(sheetName => {
