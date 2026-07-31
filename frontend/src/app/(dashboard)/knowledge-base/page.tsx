@@ -45,6 +45,13 @@ export default function KnowledgeBasePage() {
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
+      
+      // Check file size (max 4MB for Vercel serverless)
+      if (file.size > 4 * 1024 * 1024) {
+        setMessage(`❌ "${file.name}" terlalu besar (${(file.size/1024/1024).toFixed(1)}MB). Maks 4MB.`);
+        continue;
+      }
+
       try {
         const formData = new FormData();
         formData.append("file", file);
@@ -55,15 +62,23 @@ export default function KnowledgeBasePage() {
           headers: { Authorization: `Bearer ${token}` },
           body: formData,
         });
-        const data = await res.json();
 
+        const contentType = res.headers.get("content-type") || "";
+        if (!contentType.includes("application/json")) {
+          const text = await res.text();
+          setMessage(`❌ Server error saat upload "${file.name}". Coba file lebih kecil atau format lain (.docx/.txt).`);
+          console.error("Non-JSON response:", text.substring(0, 200));
+          continue;
+        }
+
+        const data = await res.json();
         if (res.ok) {
           setMessage(`✅ "${file.name}" berhasil diupload! (${data.chunks} chunks)`);
         } else {
           setMessage(`❌ Gagal upload "${file.name}": ${data.message}`);
         }
       } catch (err: any) {
-        setMessage(`❌ Error: ${err.message}`);
+        setMessage(`❌ Error upload "${file.name}": ${err.message}`);
       }
     }
 
