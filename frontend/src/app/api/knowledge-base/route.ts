@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       const XLSX = require('xlsx');
       const workbook = XLSX.read(buffer, { type: 'buffer' });
       const allText: string[] = [];
-      workbook.SheetNames.forEach(sheetName => {
+      workbook.SheetNames.forEach((sheetName: string) => {
         const sheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as any[][];
         allText.push(`=== Sheet: ${sheetName} ===`);
