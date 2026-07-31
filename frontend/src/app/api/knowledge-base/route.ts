@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getUser, unauthorized } from '@/lib/auth-helper';
 
+// Allow up to 60 seconds for file upload + parsing
+export const maxDuration = 60;
+export const dynamic = 'force-dynamic';
+
 // GET: List all documents
 export async function GET(request: NextRequest) {
   const user = getUser(request);
