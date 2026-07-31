@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       // Use unpdf (works in serverless/edge)
       const { extractText } = await import('unpdf');
       const { text } = await extractText(new Uint8Array(buffer));
-      textContent = text;
+      textContent = Array.isArray(text) ? text.join('\n') : String(text);
     } else if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || filename.endsWith('.docx')) {
       const mammoth = require('mammoth');
       const result = await mammoth.extractRawText({ buffer });
