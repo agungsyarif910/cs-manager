@@ -40,6 +40,13 @@ export async function PUT(request: NextRequest, { params }: { params: { key: str
         update: { baseUrl: value.apiUrl || '', apiKeyEncrypted: value.apiKey || '', model: value.model || '', temperature: parseFloat(value.temperature) || 0.7, maxTokens: parseInt(value.maxTokens) || 2048, topP: parseFloat(value.topP) || 0.9, systemPrompt: value.systemPrompt || '', isActive: true },
         create: { id: 'ai-provider-1', name: 'SumoPod', baseUrl: value.apiUrl || '', apiKeyEncrypted: value.apiKey || '', model: value.model || '', temperature: parseFloat(value.temperature) || 0.7, maxTokens: parseInt(value.maxTokens) || 2048, topP: parseFloat(value.topP) || 0.9, systemPrompt: value.systemPrompt || '', isActive: true, companyId }
       });
+      // Also sync systemPrompt to active AiAgent (webhook reads AiAgent first)
+      if (value.systemPrompt) {
+        await prisma.aiAgent.updateMany({
+          where: { companyId, isActive: true },
+          data: { systemPrompt: value.systemPrompt }
+        });
+      }
     }
 
     return NextResponse.json(result);
