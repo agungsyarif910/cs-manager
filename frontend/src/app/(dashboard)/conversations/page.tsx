@@ -46,33 +46,6 @@ export default function ConversationsPage() {
   const [loading, setLoading] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [search, setSearch] = useState("");
-  const [toggling, setToggling] = useState(false);
-
-  const toggleHandler = async (convId: string, newHandler: 'AI' | 'HUMAN') => {
-    setToggling(true);
-    try {
-      const token = localStorage.getItem("access_token") || "";
-      await api.patch("/conversations", {
-        id: convId,
-        status: newHandler === 'AI' ? 'AI_HANDLING' : 'HUMAN_HANDLING',
-        handlerType: newHandler
-      }, { headers: { Authorization: `Bearer ${token}` } });
-
-      // Refresh detail
-      if (selected) {
-        setSelected({
-          ...selected,
-          status: newHandler === 'AI' ? 'AI_HANDLING' : 'HUMAN_HANDLING',
-          handlerType: newHandler
-        });
-      }
-      // Also refresh list
-      loadConversations();
-    } catch (err) {
-      console.error("Failed to toggle handler:", err);
-    }
-    setToggling(false);
-  };
 
   useEffect(() => {
     loadConversations();
@@ -136,29 +109,6 @@ export default function ConversationsPage() {
             <Badge variant="outline" className={isAI ? 'text-emerald-400 border-emerald-500/30' : 'text-blue-400 border-blue-500/30'}>
               {isAI ? '🤖 AI' : '👤 Human'}
             </Badge>
-            {isAI ? (
-              <Button
-                size="sm"
-                variant="outline"
-                className="text-blue-400 border-blue-500/30 hover:bg-blue-500/10"
-                disabled={toggling}
-                onClick={() => toggleHandler(selected.id, 'HUMAN')}
-              >
-                <User className="h-3.5 w-3.5 mr-1" />
-                {toggling ? 'Switching...' : 'Takeover Human'}
-              </Button>
-            ) : (
-              <Button
-                size="sm"
-                variant="outline"
-                className="text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10"
-                disabled={toggling}
-                onClick={() => toggleHandler(selected.id, 'AI')}
-              >
-                <Bot className="h-3.5 w-3.5 mr-1" />
-                {toggling ? 'Switching...' : 'Kembalikan ke AI'}
-              </Button>
-            )}
           </div>
         </div>
 
