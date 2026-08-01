@@ -1,13 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: 'http://localhost:3001/api/:path*',
-      },
-    ];
+  webpack: (config) => {
+    // Fix pdfjs-dist "canvas" module not found
+    config.resolve.alias.canvas = false;
+    return config;
   },
 };
 
