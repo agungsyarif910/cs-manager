@@ -111,6 +111,11 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    // ========== SKIP AI IF HUMAN_HANDLING ==========
+    if (conversation.status === 'HUMAN_HANDLING' || conversation.handlerType === 'HUMAN') {
+      return NextResponse.json({ status: 'ok', reason: 'human_handling', message: 'Message saved, AI skipped (human handling)' });
+    }
+
     // ========== AI RESPONSE (only 1 reply per message) ==========
 
     let aiReply = 'Terima kasih, pesan Anda telah diterima. Tim kami akan segera membantu.';

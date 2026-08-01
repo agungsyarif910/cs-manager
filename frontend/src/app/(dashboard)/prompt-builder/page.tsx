@@ -208,11 +208,11 @@ export default function PromptBuilderPage() {
     let cancelled = false;
     async function load() {
       try {
-        const res = await api.get("/settings?key=prompt_builder");
+        const res = await api.get("/prompt-builder");
         if (cancelled) return;
         const data = res.data;
-        if (data?.value?.sections) {
-          const saved = data.value.sections as Record<string, string>;
+        if (data?.sections) {
+          const saved = data.sections as Record<string, string>;
           setSections((prev) =>
             prev.map((s) => ({
               ...s,
@@ -236,23 +236,17 @@ export default function PromptBuilderPage() {
     try {
       const token = localStorage.getItem("access_token") || "";
 
-      // Save prompt builder sections
+      // Save sections + sync systemPrompt to AiProvider & AiAgent
       const sectionsData: Record<string, string> = {};
       sections.forEach((s) => { sectionsData[s.id] = s.content; });
 
-      await api.put("/settings?key=prompt_builder", {
-        value: { sections: sectionsData }
+      const res = await api.put("/prompt-builder", {
+        systemPrompt: composedPrompt,
+        sections: sectionsData
       }, { headers: { Authorization: `Bearer ${token}` } });
 
-      // Also sync the composed prompt to AI config's systemPrompt
-      // First load current ai_config
-      const aiRes = await api.get("/settings?key=ai_config");
-      const currentAiConfig = aiRes.data?.value || {};
-      await api.put("/settings?key=ai_config", {
-        value: { ...currentAiConfig, systemPrompt: composedPrompt }
-      }, { headers: { Authorization: `Bearer ${token}` } });
-
-      setMessage("✅ Prompt berhasil disimpan dan disinkronkan ke AI Config!");
+      const data = res.data;
+      setMessage(`✅ Prompt berhasil disimpan! ${data.agentsUpdated} AI agent(s) diupdate.`);
       setTimeout(() => setMessage(""), 4000);
     } catch (err: any) {
       const detail = err?.response?.data?.message || err.message;

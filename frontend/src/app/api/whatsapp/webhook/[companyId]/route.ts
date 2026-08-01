@@ -73,6 +73,12 @@ export async function POST(request: NextRequest, { params }: { params: { company
       data: { conversationId: conversation.id, direction: 'INBOUND', type: 'TEXT', content: messageText, deliveryStatus: 'DELIVERED', isFromAi: false, sentAt: new Date() }
     });
 
+    // Skip AI if conversation is in HUMAN_HANDLING mode
+    if (conversation.status === 'HUMAN_HANDLING' || conversation.handlerType === 'HUMAN') {
+      console.log('👤 Human handling - AI skipped for', phone);
+      return NextResponse.json({ status: 'ok', reason: 'human_handling' });
+    }
+
     // Generate AI response
     let aiReply = 'Terima kasih, pesan Anda telah diterima. Tim kami akan segera membantu.';
 

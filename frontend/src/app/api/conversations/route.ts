@@ -53,3 +53,34 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ message: e.message }, { status: 500 });
   }
 }
+
+// PATCH: Update conversation status/handlerType (AI ↔ Human toggle)
+export async function PATCH(request: NextRequest) {
+  const user = getUser(request);
+  if (!user) return unauthorized();
+
+  try {
+    const { id, status, handlerType } = await request.json();
+    if (!id) return NextResponse.json({ message: 'id is required' }, { status: 400 });
+
+    const updateData: any = {};
+    if (status) updateData.status = status;
+    if (handlerType) updateData.handlerType = handlerType;
+
+    const updated = await prisma.conversation.update({
+      where: { id },
+      data: updateData,
+      include: { contact: true }
+    });
+
+    return NextResponse.json({
+      success: true,
+      id: updated.id,
+      status: updated.status,
+      handlerType: updated.handlerType,
+      customer: (updated as any).contact?.name
+    });
+  } catch (e: any) {
+    return NextResponse.json({ message: e.message }, { status: 500 });
+  }
+}
