@@ -19,9 +19,33 @@ interface Document {
   createdAt: string;
 }
 
+// Client-side PDF text extraction
+async function extractPdfText(file: File): Promise<string> {
+  const pdfjsLib = await import('pdfjs-dist');
+  pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer), useWorkerFetch: false, isEvalSupported: false, useSystemFonts: true } as any).promise;
+
+  const textParts: string[] = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pageText = content.items.map((item: any) => item.str).join(' ');
+    textParts.push(pageText);
+  }
+  return textParts.join('\n\n');
+}
+
+// Client-side text extraction for .txt files
+async function extractTxtText(file: File): Promise<string> {
+  return await file.text();
+}
+
 export default function KnowledgeBasePage() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
   const [message, setMessage] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -39,35 +63,81 @@ export default function KnowledgeBasePage() {
 
   const handleUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-
     setUploading(true);
     setMessage("");
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      
-      // Check file size (max 4MB for Vercel serverless)
-      if (file.size > 4 * 1024 * 1024) {
-        setMessage(`❌ "${file.name}" terlalu besar (${(file.size/1024/1024).toFixed(1)}MB). Maks 4MB.`);
+
+      if (file.size > 10 * 1024 * 1024) {
+        setMessage(`❌ "${file.name}" terlalu besar (${(file.size/1024/1024).toFixed(1)}MB). Maks 10MB.`);
         continue;
       }
 
       try {
-        const formData = new FormData();
-        formData.append("file", file);
+        let textContent = '';
+        const ext = file.name.split('.').pop()?.toLowerCase();
 
+        // Parse client-side based on file type
+        if (ext === 'pdf') {
+          setUploadProgress(`📄 Membaca PDF "${file.name}"...`);
+          textContent = await extractPdfText(file);
+        } else if (ext === 'txt' || ext === 'md') {
+          setUploadProgress(`📝 Membaca "${file.name}"...`);
+          textContent = await extractTxtText(file);
+        } else if (ext === 'docx' || ext === 'xlsx' || ext === 'xls' || ext === 'csv') {
+          // For DOCX/Excel, use server-side parsing (FormData upload)
+          setUploadProgress(`📎 Mengupload "${file.name}"...`);
+          const formData = new FormData();
+          formData.append("file", file);
+          const token = localStorage.getItem("access_token") || "";
+          const res = await fetch("/api/knowledge-base", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+            body: formData,
+          });
+          const ct = res.headers.get("content-type") || "";
+          if (!ct.includes("application/json")) {
+            setMessage(`❌ Server timeout. Coba file lebih kecil.`);
+            continue;
+          }
+          const data = await res.json();
+          if (res.ok) {
+            setMessage(`✅ "${file.name}" berhasil! (${data.chunks} chunks)`);
+          } else {
+            setMessage(`❌ Gagal: ${data.message}`);
+          }
+          continue;
+        } else {
+          setMessage(`❌ Format "${ext}" tidak didukung.`);
+          continue;
+        }
+
+        if (!textContent.trim()) {
+          setMessage(`❌ Tidak bisa membaca teks dari "${file.name}".`);
+          continue;
+        }
+
+        // Send extracted text to server (fast, no parsing needed server-side)
+        setUploadProgress(`💾 Menyimpan "${file.name}" (${(textContent.length/1024).toFixed(0)}KB teks)...`);
         const token = localStorage.getItem("access_token") || "";
-        const res = await fetch("/api/knowledge-base", {
+        const res = await fetch("/api/knowledge-base/upload-text", {
           method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-          body: formData,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            filename: file.name,
+            mimeType: file.type,
+            fileSize: file.size,
+            textContent,
+          }),
         });
 
-        const contentType = res.headers.get("content-type") || "";
-        if (!contentType.includes("application/json")) {
-          const text = await res.text();
-          setMessage(`❌ Server error saat upload "${file.name}". Coba file lebih kecil atau format lain (.docx/.txt).`);
-          console.error("Non-JSON response:", text.substring(0, 200));
+        const ct = res.headers.get("content-type") || "";
+        if (!ct.includes("application/json")) {
+          setMessage(`❌ Server error. Coba lagi.`);
           continue;
         }
 
@@ -75,16 +145,17 @@ export default function KnowledgeBasePage() {
         if (res.ok) {
           setMessage(`✅ "${file.name}" berhasil diupload! (${data.chunks} chunks)`);
         } else {
-          setMessage(`❌ Gagal upload "${file.name}": ${data.message}`);
+          setMessage(`❌ Gagal: ${data.message}`);
         }
       } catch (err: any) {
-        setMessage(`❌ Error upload "${file.name}": ${err.message}`);
+        setMessage(`❌ Error: ${err.message}`);
       }
     }
 
     setUploading(false);
+    setUploadProgress("");
     loadDocuments();
-    setTimeout(() => setMessage(""), 5000);
+    setTimeout(() => setMessage(""), 8000);
   };
 
   const handleDelete = async (id: string, name: string) => {
@@ -133,10 +204,9 @@ export default function KnowledgeBasePage() {
         </TabsList>
 
         <TabsContent value="documents" className="space-y-4">
-          {/* Upload Area */}
           <Card 
             className={`border-dashed border-2 bg-transparent shadow-none cursor-pointer transition-colors ${dragOver ? 'border-primary bg-primary/5' : 'hover:bg-muted/30'}`}
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => !uploading && fileInputRef.current?.click()}
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
             onDrop={(e) => { e.preventDefault(); setDragOver(false); handleUpload(e.dataTransfer.files); }}
@@ -145,33 +215,26 @@ export default function KnowledgeBasePage() {
               {uploading ? (
                 <>
                   <Loader2 className="h-10 w-10 mb-4 animate-spin text-primary" />
-                  <p className="font-medium">Mengupload & memproses...</p>
+                  <p className="font-medium">{uploadProgress || 'Memproses...'}</p>
                 </>
               ) : (
                 <>
                   <UploadCloud className="h-10 w-10 mb-4" />
                   <p className="font-medium">Drag & drop files atau klik untuk upload</p>
-                  <p className="text-sm mt-1">Supports PDF, DOCX, XLSX, CSV, TXT (Max 10MB)</p>
+                  <p className="text-sm mt-1">PDF, DOCX, XLSX, CSV, TXT (Max 10MB)</p>
+                  <p className="text-xs mt-1 text-muted-foreground/60">PDF & TXT diparse di browser — cepat tanpa timeout!</p>
                 </>
               )}
             </CardContent>
           </Card>
 
-          <input 
-            ref={fileInputRef} 
-            type="file" 
-            className="hidden" 
-            multiple
-            accept=".pdf,.docx,.xlsx,.xls,.csv,.txt,.md"
-            onChange={(e) => handleUpload(e.target.files)}
-          />
+          <input ref={fileInputRef} type="file" className="hidden" multiple accept=".pdf,.docx,.xlsx,.xls,.csv,.txt,.md" onChange={(e) => handleUpload(e.target.files)} />
 
-          {/* Document List */}
           {documents.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">📚 Dokumen yang Diupload ({documents.length})</CardTitle>
-                <CardDescription>AI akan menggunakan dokumen ini untuk menjawab pertanyaan pelanggan.</CardDescription>
+                <CardTitle className="text-lg">📚 Dokumen ({documents.length})</CardTitle>
+                <CardDescription>AI akan menggunakan dokumen ini untuk menjawab.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -189,8 +252,7 @@ export default function KnowledgeBasePage() {
                     {documents.map((doc) => (
                       <TableRow key={doc.id}>
                         <TableCell className="font-medium flex items-center gap-2">
-                          {getFileIcon(doc.type)}
-                          {doc.name}
+                          {getFileIcon(doc.type)} {doc.name}
                         </TableCell>
                         <TableCell className="uppercase text-xs">{doc.type}</TableCell>
                         <TableCell>{formatSize(doc.size)}</TableCell>
@@ -218,7 +280,7 @@ export default function KnowledgeBasePage() {
               <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                 <FileText className="h-12 w-12 mb-4 opacity-50" />
                 <p className="font-medium">Belum ada dokumen</p>
-                <p className="text-sm mt-1">Upload dokumen pertama kamu untuk melatih AI</p>
+                <p className="text-sm mt-1">Upload dokumen pertama untuk melatih AI</p>
               </CardContent>
             </Card>
           )}
@@ -228,13 +290,12 @@ export default function KnowledgeBasePage() {
           <Card>
             <CardHeader>
               <CardTitle>📊 Spreadsheet Data</CardTitle>
-              <CardDescription>Upload data Excel/CSV — otomatis diparse dan dimasukkan ke knowledge base.</CardDescription>
+              <CardDescription>Upload Excel/CSV — otomatis diparse.</CardDescription>
             </CardHeader>
             <CardContent>
               <Button onClick={() => fileInputRef.current?.click()}>
                 <UploadCloud className="h-4 w-4 mr-2" /> Upload Excel/CSV
               </Button>
-              <p className="text-muted-foreground text-sm mt-4">Data dari Excel akan diparse per-sheet dan dijadikan referensi AI.</p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -243,10 +304,10 @@ export default function KnowledgeBasePage() {
           <Card>
             <CardHeader>
               <CardTitle>🗄️ Database Connections</CardTitle>
-              <CardDescription>Fitur koneksi database akan tersedia di versi selanjutnya.</CardDescription>
+              <CardDescription>Coming soon.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground text-sm">Coming soon — koneksi langsung ke PostgreSQL, MySQL, dll.</p>
+              <p className="text-muted-foreground text-sm">Koneksi langsung ke database akan tersedia di versi selanjutnya.</p>
             </CardContent>
           </Card>
         </TabsContent>
