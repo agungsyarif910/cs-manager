@@ -44,13 +44,6 @@ export default function SettingsPage() {
     webhookUrl: "",
   });
 
-  const [autoReply, setAutoReply] = useState({
-    outsideHours: "Terima kasih telah menghubungi kami. Saat ini di luar jam operasional.",
-    holiday: "Terima kasih telah menghubungi kami. Saat ini kami sedang libur.",
-    busy: "Mohon maaf, semua agen kami sedang sibuk.",
-    greeting: "Halo! Selamat datang. Ada yang bisa kami bantu hari ini?",
-    delayMs: "3000",
-  });
 
   const [notifConfig, setNotifConfig] = useState({
     telegramBotToken: "",
@@ -77,7 +70,6 @@ export default function SettingsPage() {
         if (settings.general) setGeneral(prev => ({ ...prev, ...settings.general }));
         if (settings.ai_config) setAiConfig(prev => ({ ...prev, ...settings.ai_config }));
         if (settings.whatsapp_config) setWaConfig(prev => ({ ...prev, ...settings.whatsapp_config }));
-        if (settings.auto_reply) setAutoReply(prev => ({ ...prev, ...settings.auto_reply }));
         if (settings.notifications) setNotifConfig(prev => ({ ...prev, ...settings.notifications }));
         if (settings.handler_mode?.mode) setHandlerMode(settings.handler_mode.mode);
       } catch (e) {
@@ -121,7 +113,6 @@ export default function SettingsPage() {
     { id: "general", label: "General" },
     { id: "ai", label: "AI Config" },
     { id: "whatsapp", label: "WhatsApp API" },
-    { id: "autoreply", label: "Auto-Reply" },
     { id: "notifications", label: "Notifications" },
   ];
 
@@ -384,41 +375,6 @@ export default function SettingsPage() {
             </>
           )}
 
-          {/* Auto-Reply */}
-          {activeTab === "autoreply" && (
-            <Card>
-              <CardHeader>
-                <CardTitle>💬 Auto-Reply Messages</CardTitle>
-                <CardDescription>Pesan otomatis untuk berbagai trigger.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>🎉 Greeting Message</Label>
-                  <textarea className={textareaClass} value={autoReply.greeting} onChange={e => setAutoReply({...autoReply, greeting: e.target.value})} />
-                </div>
-                <div className="space-y-2">
-                  <Label>🌙 Outside Working Hours</Label>
-                  <textarea className={textareaClass} value={autoReply.outsideHours} onChange={e => setAutoReply({...autoReply, outsideHours: e.target.value})} />
-                </div>
-                <div className="space-y-2">
-                  <Label>🏖️ Holiday Message</Label>
-                  <textarea className={textareaClass} value={autoReply.holiday} onChange={e => setAutoReply({...autoReply, holiday: e.target.value})} />
-                </div>
-                <div className="space-y-2">
-                  <Label>⏳ Busy Message</Label>
-                  <textarea className={textareaClass} value={autoReply.busy} onChange={e => setAutoReply({...autoReply, busy: e.target.value})} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Reply Delay (ms)</Label>
-                  <Input type="number" value={autoReply.delayMs} onChange={e => setAutoReply({...autoReply, delayMs: e.target.value})} />
-                  <p className="text-xs text-muted-foreground">3000 = 3 detik</p>
-                </div>
-                <Button disabled={saving === "auto_reply"} onClick={() => handleSave("Auto-Reply", "auto_reply", autoReply)}>
-                  {saving === "auto_reply" ? "Menyimpan..." : "💾 Simpan Auto-Reply"}
-                </Button>
-              </CardContent>
-            </Card>
-          )}
 
           {/* Notifications */}
           {activeTab === "notifications" && (

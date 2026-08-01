@@ -88,14 +88,6 @@ enum TemplateCategory {
   BROADCAST
 }
 
-enum TriggerType {
-  INSTANT
-  DELAYED
-  SCHEDULED
-  OUTSIDE_HOURS
-  HOLIDAY
-  BUSY
-}
 
 enum BroadcastStatus {
   DRAFT
@@ -141,7 +133,6 @@ model Company {
   databaseConnections  DatabaseConnection[]
   workflows            Workflow[]
   templates            Template[]
-  autoReplies          AutoReply[]
   broadcasts           Broadcast[]
   auditLogs            AuditLog[]
   notifications        Notification[]
@@ -400,20 +391,6 @@ model Template {
   @@map("templates")
 }
 
-model AutoReply {
-  id                   String                 @id @default(uuid())
-  companyId            String
-  company              Company                @relation(fields: [companyId], references: [id])
-  triggerType          TriggerType            @default(INSTANT)
-  message              String
-  delayMs              Int                    @default(0)
-  schedule             Json?
-  isActive             Boolean                @default(true)
-  createdAt            DateTime               @default(now())
-
-  @@index([companyId])
-  @@map("auto_replies")
-}
 
 model Broadcast {
   id                   String                 @id @default(uuid())

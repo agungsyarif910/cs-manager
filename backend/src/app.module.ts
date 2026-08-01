@@ -18,7 +18,7 @@ import { AuditModule } from './audit/audit.module';
 import { NotificationModule } from './notification/notification.module';
 import { BackupModule } from './backup/backup.module';
 import { SettingsModule } from './settings/settings.module';
-import { AutoReplyModule } from './auto-reply/auto-reply.module';
+
 import { AppConfigModule } from './config/config.module';
 
 // Conditionally import Bull/Queue modules only when Redis is available
@@ -75,7 +75,7 @@ if (REDIS_ENABLED) {
     NotificationModule,
     BackupModule,
     SettingsModule,
-    AutoReplyModule,
+
     ...conditionalImports,
   ],
 })
