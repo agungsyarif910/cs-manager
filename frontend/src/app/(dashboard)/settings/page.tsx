@@ -246,14 +246,27 @@ export default function SettingsPage() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>📝 Default System Prompt</CardTitle>
+                  <CardTitle>📝 System Prompt</CardTitle>
+                  <CardDescription>System prompt sekarang dikelola melalui Prompt Builder.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <textarea
-                    className={textareaClass}
-                    value={aiConfig.systemPrompt}
-                    onChange={e => setAiConfig({...aiConfig, systemPrompt: e.target.value})}
-                  />
+                  <div className="p-4 rounded-lg bg-primary/5 border border-primary/20 text-sm">
+                    <p className="text-muted-foreground mb-3">
+                      Gunakan <strong>Prompt Builder</strong> untuk membangun system prompt secara visual dengan section-section terpisah (Identitas, Persona, Gaya Bahasa, dll).
+                    </p>
+                    <a href="/prompt-builder" className="inline-flex items-center gap-2 text-primary hover:underline font-medium">
+                      🔧 Buka Prompt Builder →
+                    </a>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Preview System Prompt (read-only)</Label>
+                    <textarea
+                      className={textareaClass + " opacity-60"}
+                      value={aiConfig.systemPrompt}
+                      readOnly
+                      style={{ minHeight: "80px" }}
+                    />
+                  </div>
                   <Button disabled={saving === "ai_config"} onClick={() => handleSave("AI Config", "ai_config", aiConfig)}>
                     {saving === "ai_config" ? "Menyimpan..." : "💾 Simpan AI Config"}
                   </Button>
