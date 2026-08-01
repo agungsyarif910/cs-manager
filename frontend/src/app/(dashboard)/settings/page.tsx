@@ -14,6 +14,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState("");
   const [activeTab, setActiveTab] = useState("general");
   const [message, setMessage] = useState("");
+  const [handlerMode, setHandlerMode] = useState<'AI' | 'HUMAN'>('AI');
 
   const [general, setGeneral] = useState({
     companyName: "My Company",
@@ -78,6 +79,7 @@ export default function SettingsPage() {
         if (settings.whatsapp_config) setWaConfig(prev => ({ ...prev, ...settings.whatsapp_config }));
         if (settings.auto_reply) setAutoReply(prev => ({ ...prev, ...settings.auto_reply }));
         if (settings.notifications) setNotifConfig(prev => ({ ...prev, ...settings.notifications }));
+        if (settings.handler_mode?.mode) setHandlerMode(settings.handler_mode.mode);
       } catch (e) {
         console.error("Failed to load settings:", e);
       } finally {
@@ -157,39 +159,96 @@ export default function SettingsPage() {
         <div className="flex-1 space-y-4">
           {/* General */}
           {activeTab === "general" && (
-            <Card>
-              <CardHeader>
-                <CardTitle>General Settings</CardTitle>
-                <CardDescription>Informasi perusahaan dan defaults.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Company Name</Label>
-                  <Input value={general.companyName} onChange={e => setGeneral({...general, companyName: e.target.value})} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Timezone</Label>
-                  <Input value={general.timezone} onChange={e => setGeneral({...general, timezone: e.target.value})} />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+            <>
+              {/* Global Handler Mode Toggle */}
+              <Card className={`border-2 ${handlerMode === 'AI' ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-blue-500/30 bg-blue-500/5'}`}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    {handlerMode === 'AI' ? '🤖' : '👤'} Mode Penanganan Chat
+                  </CardTitle>
+                  <CardDescription>
+                    Pilih siapa yang menangani semua chat masuk secara default.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setHandlerMode('AI')}
+                      className={`flex-1 p-4 rounded-lg border-2 transition-all text-left ${
+                        handlerMode === 'AI'
+                          ? 'border-emerald-500 bg-emerald-500/10 shadow-lg'
+                          : 'border-muted hover:border-emerald-500/50'
+                      }`}
+                    >
+                      <div className="text-lg font-bold flex items-center gap-2">
+                        🤖 AI Mode
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        AI otomatis membalas semua chat. Bisa di-takeover per percakapan.
+                      </p>
+                    </button>
+                    <button
+                      onClick={() => setHandlerMode('HUMAN')}
+                      className={`flex-1 p-4 rounded-lg border-2 transition-all text-left ${
+                        handlerMode === 'HUMAN'
+                          ? 'border-blue-500 bg-blue-500/10 shadow-lg'
+                          : 'border-muted hover:border-blue-500/50'
+                      }`}
+                    >
+                      <div className="text-lg font-bold flex items-center gap-2">
+                        👤 Human Mode
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Chat masuk hanya disimpan, tidak dibalas AI. Admin balas manual.
+                      </p>
+                    </button>
+                  </div>
+                  <Button
+                    disabled={saving === "handler_mode"}
+                    onClick={async () => {
+                      await handleSave("Handler Mode", "handler_mode", { mode: handlerMode });
+                    }}
+                    className="w-full"
+                  >
+                    {saving === "handler_mode" ? "Menyimpan..." : `💾 Simpan Mode: ${handlerMode === 'AI' ? '🤖 AI' : '👤 Human'}`}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>General Settings</CardTitle>
+                  <CardDescription>Informasi perusahaan dan defaults.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Working Hours Start</Label>
-                    <Input type="time" value={general.workingHoursStart} onChange={e => setGeneral({...general, workingHoursStart: e.target.value})} />
+                    <Label>Company Name</Label>
+                    <Input value={general.companyName} onChange={e => setGeneral({...general, companyName: e.target.value})} />
                   </div>
                   <div className="space-y-2">
-                    <Label>Working Hours End</Label>
-                    <Input type="time" value={general.workingHoursEnd} onChange={e => setGeneral({...general, workingHoursEnd: e.target.value})} />
+                    <Label>Timezone</Label>
+                    <Input value={general.timezone} onChange={e => setGeneral({...general, timezone: e.target.value})} />
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Default Language</Label>
-                  <Input value={general.language} onChange={e => setGeneral({...general, language: e.target.value})} />
-                </div>
-                <Button disabled={saving === "general"} onClick={() => handleSave("General", "general", general)}>
-                  {saving === "general" ? "Menyimpan..." : "💾 Simpan ke Database"}
-                </Button>
-              </CardContent>
-            </Card>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Working Hours Start</Label>
+                      <Input type="time" value={general.workingHoursStart} onChange={e => setGeneral({...general, workingHoursStart: e.target.value})} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Working Hours End</Label>
+                      <Input type="time" value={general.workingHoursEnd} onChange={e => setGeneral({...general, workingHoursEnd: e.target.value})} />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Default Language</Label>
+                    <Input value={general.language} onChange={e => setGeneral({...general, language: e.target.value})} />
+                  </div>
+                  <Button disabled={saving === "general"} onClick={() => handleSave("General", "general", general)}>
+                    {saving === "general" ? "Menyimpan..." : "💾 Simpan ke Database"}
+                  </Button>
+                </CardContent>
+              </Card>
+            </>
           )}
 
           {/* AI Config */}

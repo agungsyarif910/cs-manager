@@ -56,16 +56,22 @@ export async function POST(request: NextRequest, { params }: { params: { company
       console.log('👤 New contact created:', contact.id);
     }
 
-    // Find or create conversation
+    // Check global handler mode setting
+    const handlerSetting = await prisma.setting.findFirst({ where: { companyId, key: 'handler_mode' } });
+    const globalMode = (handlerSetting?.value as any)?.mode || 'AI';
+
+    // Find or create conversation (include HUMAN_HANDLING so we don't create duplicates)
     let conversation = await prisma.conversation.findFirst({
-      where: { contactId: contact.id, companyId, status: { in: ['ACTIVE', 'AI_HANDLING'] } }
+      where: { contactId: contact.id, companyId, status: { in: ['ACTIVE', 'AI_HANDLING', 'HUMAN_HANDLING'] } }
     });
     if (!conversation) {
       const agent = await prisma.aiAgent.findFirst({ where: { companyId, isActive: true } });
+      const newStatus = globalMode === 'HUMAN' ? 'HUMAN_HANDLING' : 'AI_HANDLING';
+      const newHandler = globalMode === 'HUMAN' ? 'HUMAN' : 'AI';
       conversation = await prisma.conversation.create({
-        data: { contactId: contact.id, companyId, agentId: agent?.id, status: 'AI_HANDLING', handlerType: 'AI', startedAt: new Date() }
+        data: { contactId: contact.id, companyId, agentId: agent?.id, status: newStatus, handlerType: newHandler, startedAt: new Date() }
       });
-      console.log('💬 New conversation created:', conversation.id);
+      console.log('💬 New conversation created:', conversation.id, '| Mode:', newHandler);
     }
 
     // Save incoming message
