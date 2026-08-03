@@ -1,6 +1,89 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+// ─── Human-like Behavior Helpers ─────────────────────────────
+
+/** Calculate realistic typing delay based on response length */
+function calculateTypingDelay(text: string): number {
+  const charsPerSecond = 12; // ~40 WPM
+  const minDelay = 1500;
+  const maxDelay = 8000;
+  const calculated = (text.length / charsPerSecond) * 1000;
+  const randomFactor = 0.8 + Math.random() * 0.4;
+  return Math.min(Math.max(calculated * randomFactor, minDelay), maxDelay);
+}
+
+/** Sleep utility */
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/** Build human-like system prompt */
+function buildHumanLikePrompt(basePrompt: string, agent?: any): string {
+  let prompt = basePrompt;
+
+  if (agent?.role) prompt += `\nYour role: ${agent.role}`;
+  if (agent?.language) prompt += `\nAlways respond in ${agent.language}.`;
+  if (agent?.tone) prompt += `\nTone: ${agent.tone}`;
+
+  prompt += `
+
+## Aturan Perilaku Chat (WAJIB diikuti):
+
+### Gaya Menulis:
+- Tulis pesan seperti manusia biasa di WhatsApp, BUKAN seperti robot/AI
+- Gunakan huruf kecil di awal kalimat sesekali (seperti chat biasa)
+- Jangan terlalu formal, gunakan bahasa sehari-hari yang sopan
+- Boleh gunakan singkatan wajar (yg, utk, dgn, dll) jika sesuai tone
+- Gunakan emoji secukupnya, jangan berlebihan (1-2 per pesan)
+- Jangan gunakan format markdown (**, ##, dll) — ini WhatsApp, bukan dokumen
+
+### Panjang Pesan:
+- Jawab singkat dan to the point (1-3 kalimat untuk pertanyaan sederhana)
+- Untuk penjelasan panjang, pecah jadi beberapa paragraf pendek
+- Jangan membuat daftar panjang kecuali diminta
+
+### Perilaku Natural:
+- Jangan selalu memulai dengan "Tentu!" atau "Baik!" — variasikan pembukaan
+- Jangan selalu mengakhiri dengan "Ada yang bisa dibantu lagi?" — gunakan sesekali saja
+- Jika tidak tahu jawabannya, bilang jujur dan tawarkan alternatif
+- Sesekali gunakan kata-kata empati: "oh gitu", "wah", "hmm", "oke"
+- Jangan ulangi pertanyaan user kembali, langsung jawab
+
+### Yang TIDAK boleh dilakukan:
+- Jangan menyebut bahwa kamu adalah AI/bot/asisten virtual
+- Jangan gunakan frasa template yang kaku
+- Jangan berikan disclaimer panjang
+- Jangan gunakan bullet points berlebihan`;
+
+  return prompt;
+}
+
+/** Send mark-as-read status */
+async function markAsRead(waConfig: any, messageId: string) {
+  try {
+    await fetch(`${waConfig.apiBaseUrl}/${waConfig.phoneNumberId}/messages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${waConfig.apiKeyEncrypted}` },
+      body: JSON.stringify({ messaging_product: 'whatsapp', status: 'read', message_id: messageId })
+    });
+  } catch (e) { /* silent fail */ }
+}
+
+/** Send typing indicator (provider-specific, may not be supported) */
+async function sendTypingIndicator(waConfig: any, to: string, durationSec: number) {
+  try {
+    await fetch(`${waConfig.apiBaseUrl}/${waConfig.phoneNumberId}/messages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${waConfig.apiKeyEncrypted}` },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp', recipient_type: 'individual', to,
+        type: 'typing', typing: { action: 'typing', duration: durationSec }
+      })
+    });
+  } catch (e) { /* typing indicator not supported by all providers, fail silently */ }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -95,17 +178,39 @@ export async function POST(request: NextRequest) {
     const handlerSetting = await prisma.setting.findFirst({ where: { companyId, key: 'handler_mode' } });
     const globalMode = (handlerSetting?.value as any)?.mode || 'AI';
 
-    // Find or create conversation (include HUMAN_HANDLING so we don't create duplicates)
+    // Find or create conversation
     let conversation = await prisma.conversation.findFirst({
       where: { contactId: dbContact.id, companyId, status: { in: ['ACTIVE', 'AI_HANDLING', 'HUMAN_HANDLING'] } }
     });
+
     if (!conversation) {
+      // Create new conversation with current global mode
       const agent = await prisma.aiAgent.findFirst({ where: { companyId, isActive: true } });
       const newStatus = globalMode === 'HUMAN' ? 'HUMAN_HANDLING' : 'AI_HANDLING';
       const newHandler = globalMode === 'HUMAN' ? 'HUMAN' : 'AI';
       conversation = await prisma.conversation.create({
         data: { contactId: dbContact.id, companyId, agentId: agent?.id, status: newStatus, handlerType: newHandler, startedAt: new Date() }
       });
+    } else {
+      // ========== FIX: Sync existing conversation with global mode ==========
+      // If global mode changed to AI but conversation is stuck in HUMAN (and no specific agent assigned),
+      // auto-switch it back to AI mode
+      if (globalMode === 'AI' && conversation.handlerType === 'HUMAN' && !conversation.assignedUserId) {
+        const agent = await prisma.aiAgent.findFirst({ where: { companyId, isActive: true } });
+        conversation = await prisma.conversation.update({
+          where: { id: conversation.id },
+          data: { status: 'AI_HANDLING', handlerType: 'AI', agentId: agent?.id || conversation.agentId }
+        });
+        console.log(`[Webhook] Auto-switched conversation ${conversation.id} to AI mode (global mode: AI)`);
+      }
+      // If global mode changed to HUMAN but conversation is in AI mode
+      if (globalMode === 'HUMAN' && conversation.handlerType === 'AI') {
+        conversation = await prisma.conversation.update({
+          where: { id: conversation.id },
+          data: { status: 'HUMAN_HANDLING', handlerType: 'HUMAN' }
+        });
+        console.log(`[Webhook] Auto-switched conversation ${conversation.id} to HUMAN mode (global mode: HUMAN)`);
+      }
     }
 
     // Save incoming message (with externalId for dedup)
@@ -118,8 +223,14 @@ export async function POST(request: NextRequest) {
     });
 
     // ========== SKIP AI IF HUMAN_HANDLING ==========
+    // Only skip if conversation is explicitly assigned to a human agent OR global mode is HUMAN
     if (conversation.status === 'HUMAN_HANDLING' || conversation.handlerType === 'HUMAN') {
       return NextResponse.json({ status: 'ok', reason: 'human_handling', message: 'Message saved, AI skipped (human handling)' });
+    }
+
+    // ========== HUMAN-LIKE: Mark as Read ==========
+    if (externalMessageId) {
+      await markAsRead(waConfig, externalMessageId);
     }
 
     // ========== AI RESPONSE (only 1 reply per message) ==========
@@ -149,8 +260,10 @@ export async function POST(request: NextRequest) {
           }
         } catch (kbErr: any) { console.error('KB error:', kbErr.message); }
 
-        const systemPrompt = (aiAgent?.systemPrompt || aiProvider.systemPrompt ||
-          'Kamu adalah AI CS yang ramah. Jawab singkat dalam Bahasa Indonesia.') + knowledgeContext;
+        // Build human-like system prompt
+        const basePrompt = aiAgent?.systemPrompt || aiProvider.systemPrompt ||
+          'Kamu adalah AI CS yang ramah. Jawab singkat dalam Bahasa Indonesia.';
+        const systemPrompt = buildHumanLikePrompt(basePrompt, aiAgent) + knowledgeContext;
 
         const recentMessages = await prisma.message.findMany({
           where: { conversationId: conversation.id }, orderBy: { createdAt: 'desc' }, take: 10
@@ -178,6 +291,11 @@ export async function POST(request: NextRequest) {
       } catch (err: any) { console.error('AI Error:', err.message); }
     }
 
+    // ========== HUMAN-LIKE: Typing Delay ==========
+    const typingDelay = calculateTypingDelay(aiReply);
+    await sendTypingIndicator(waConfig, phone, Math.ceil(typingDelay / 1000));
+    await sleep(typingDelay);
+
     // Save AI reply
     await prisma.message.create({
       data: {
@@ -186,7 +304,7 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Send via KirimDev (1 message only)
+    // Send via WhatsApp API
     try {
       await fetch(`${waConfig.apiBaseUrl}/${waConfig.phoneNumberId}/messages`, {
         method: 'POST',
