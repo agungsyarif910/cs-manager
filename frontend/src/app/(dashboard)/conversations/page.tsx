@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, ArrowLeft, Bot, User, Clock, MessageSquare } from "lucide-react";
+import { Search, ArrowLeft, Bot, User, Clock, MessageSquare, RefreshCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import api from "@/lib/api";
 
@@ -46,6 +46,8 @@ export default function ConversationsPage() {
   const [loading, setLoading] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [search, setSearch] = useState("");
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState("");
 
   useEffect(() => {
     loadConversations();
@@ -60,6 +62,18 @@ export default function ConversationsPage() {
       console.error("Failed to load conversations:", err);
     }
     setLoading(false);
+  };
+
+  const syncContacts = async () => {
+    setSyncing(true);
+    setSyncResult("");
+    try {
+      const res = await api.post("/contacts/sync");
+      setSyncResult(`✅ ${res.data.message}`);
+    } catch (err: any) {
+      setSyncResult(`❌ Gagal sync: ${err.response?.data?.message || err.message}`);
+    }
+    setSyncing(false);
   };
 
   const openConversation = async (id: string) => {
@@ -192,7 +206,16 @@ export default function ConversationsPage() {
           />
         </div>
         <Button variant="outline" size="sm" onClick={loadConversations}>🔄 Refresh</Button>
+        <Button variant="outline" size="sm" onClick={syncContacts} disabled={syncing} className="gap-1.5">
+          <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+          {syncing ? 'Syncing...' : 'Sync ke Kontak'}
+        </Button>
       </div>
+      {syncResult && (
+        <p className={`text-sm px-1 ${syncResult.startsWith('✅') ? 'text-emerald-500' : 'text-red-500'}`}>
+          {syncResult}
+        </p>
+      )}
 
       <div className="rounded-md border bg-card glass">
         <Table>
