@@ -15,7 +15,7 @@ export interface Contact {
   email?: string;
   labels: string[];
   tags: string[];
-  status: "active" | "inactive" | "blocked";
+  status: string;
   createdAt: string;
 }
 
