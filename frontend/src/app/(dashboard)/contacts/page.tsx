@@ -47,7 +47,7 @@ export default function ContactsPage() {
     const headers = ["Name", "Phone", "Email", "Labels", "Status", "Created"];
     const rows = filtered.map(c => [
       c.name,
-      `=""${c.phone || ''}""`, // Force Excel to treat phone as text
+      "\t" + (c.phone || ''), // Tab prefix prevents Excel from treating as number
       c.email || "",
       (c.labels || []).join("; "),
       c.status,
@@ -56,12 +56,7 @@ export default function ContactsPage() {
 
     const csvContent = [
       headers.join(","),
-      ...rows.map(row => row.map(cell => {
-        const val = String(cell || '').replace(/"/g, '""');
-        // Don't double-wrap cells that already have = formula
-        if (String(cell).startsWith('="')) return cell;
-        return `"${val}"`;
-      }).join(","))
+      ...rows.map(row => row.map(cell => `"${String(cell || '').replace(/"/g, '""')}"`).join(","))
     ].join("\n");
 
     const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
