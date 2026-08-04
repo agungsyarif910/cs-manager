@@ -47,7 +47,7 @@ export default function ContactsPage() {
     const headers = ["Name", "Phone", "Email", "Labels", "Status", "Created"];
     const rows = filtered.map(c => [
       c.name,
-      c.phone,
+      `=""${c.phone || ''}""`, // Force Excel to treat phone as text
       c.email || "",
       (c.labels || []).join("; "),
       c.status,
@@ -56,7 +56,12 @@ export default function ContactsPage() {
 
     const csvContent = [
       headers.join(","),
-      ...rows.map(row => row.map(cell => `"${(cell || '').replace(/"/g, '""')}"`).join(","))
+      ...rows.map(row => row.map(cell => {
+        const val = String(cell || '').replace(/"/g, '""');
+        // Don't double-wrap cells that already have = formula
+        if (String(cell).startsWith('="')) return cell;
+        return `"${val}"`;
+      }).join(","))
     ].join("\n");
 
     const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
@@ -80,7 +85,7 @@ export default function ContactsPage() {
     filtered.forEach(c => {
       tableHtml += '<tr>';
       tableHtml += `<td>${c.name || ''}</td>`;
-      tableHtml += `<td>${c.phone || ''}</td>`;
+      tableHtml += `<td style="mso-number-format:'\\@'">${c.phone || ''}</td>`;
       tableHtml += `<td>${c.email || ''}</td>`;
       tableHtml += `<td>${(c.labels || []).join(', ')}</td>`;
       tableHtml += `<td>${c.status || ''}</td>`;
