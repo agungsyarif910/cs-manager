@@ -235,6 +235,8 @@ export async function POST(request: NextRequest) {
     // ========== SKIP AI IF HUMAN_HANDLING ==========
     // Only skip if conversation is explicitly assigned to a human agent OR global mode is HUMAN
     if (conversation.status === 'HUMAN_HANDLING' || conversation.handlerType === 'HUMAN') {
+      // Still process follow-ups for other conversations
+      processFollowUps(companyId).catch(err => console.error('[Follow-Up] Background error:', err));
       return NextResponse.json({ status: 'ok', reason: 'human_handling', message: 'Message saved, AI skipped (human handling)' });
     }
 
@@ -323,6 +325,9 @@ export async function POST(request: NextRequest) {
       });
     } catch (err: any) { console.error('Send Error:', err.message); }
 
+    // ========== PROCESS PENDING FOLLOW-UPS ==========
+    processFollowUps(companyId).catch(err => console.error('[Follow-Up] Background error:', err));
+
     return NextResponse.json({ status: 'ok' });
   } catch (e: any) {
     console.error('Webhook Error:', e);
@@ -330,6 +335,156 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// ═══════════════════════════════════════════════════════════════
+// FOLLOW-UP ENGINE — runs inline on every webhook call
+// ═══════════════════════════════════════════════════════════════
+
+async function processFollowUps(companyId: string) {
+  try {
+    // Load follow-up config
+    const setting = await prisma.setting.findFirst({
+      where: { companyId, key: 'follow_up_config' },
+    });
+    if (!setting) return;
+
+    const config = setting.value as any;
+    if (!config?.enabled) return;
+
+    const {
+      interval1Hours = 3,
+      interval2Hours = 24,
+      interval3Hours = 72,
+      maxFollowUps = 3,
+      workingHourStart = 8,
+      workingHourEnd = 20,
+      followUpPrompt = 'Kirim pesan follow-up yang ramah.',
+    } = config;
+
+    // Check working hours (Asia/Jakarta)
+    const now = new Date();
+    const jakartaHour = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' })).getHours();
+    if (jakartaHour < workingHourStart || jakartaHour >= workingHourEnd) return;
+
+    const intervals = [interval1Hours, interval2Hours, interval3Hours];
+
+    // Find eligible conversations
+    const conversations = await prisma.conversation.findMany({
+      where: { companyId, status: 'AI_HANDLING', handlerType: 'AI' },
+      include: {
+        contact: true,
+        messages: { orderBy: { createdAt: 'desc' }, take: 10 },
+      },
+    });
+
+    const waConfig = await prisma.whatsAppConfig.findFirst({ where: { companyId, isActive: true } });
+    const aiProvider = await prisma.aiProvider.findFirst({ where: { companyId, isActive: true } });
+    if (!waConfig || !aiProvider) return;
+
+    for (const conv of conversations) {
+      if (!conv.messages.length) continue;
+
+      const lastMsg = conv.messages[0];
+      // Only follow up if last message is OUTBOUND (AI replied, customer silent)
+      if (lastMsg.direction !== 'OUTBOUND') continue;
+
+      const metadata = (conv.metadata as any) || {};
+      const followUpCount = metadata.followUpCount || 0;
+      if (followUpCount >= maxFollowUps) continue;
+
+      const requiredHours = intervals[Math.min(followUpCount, intervals.length - 1)];
+      const timeSinceLastMsg = now.getTime() - new Date(lastMsg.createdAt).getTime();
+      if (timeSinceLastMsg < requiredHours * 3600000) continue;
+
+      // Generate follow-up message via AI
+      let followUpMessage = 'Halo kak, apakah masih ada yang bisa kami bantu? 😊';
+      try {
+        const chatHistory = conv.messages.reverse().map((m: any) => ({
+          role: m.direction === 'INBOUND' ? 'user' : 'assistant',
+          content: m.content || '',
+        }));
+
+        const systemPrompt = `${followUpPrompt}
+
+Konteks:
+- Ini follow-up ke-${followUpCount + 1}
+- Customer tidak membalas selama ${Math.round(timeSinceLastMsg / 3600000)} jam
+- Nama customer: ${conv.contact?.name || 'Customer'}
+${followUpCount === 0 ? '- Follow-up pertama, tanyakan apakah masih tertarik' : ''}
+${followUpCount === 1 ? '- Follow-up kedua, tawarkan bantuan tambahan' : ''}
+${followUpCount >= 2 ? '- Follow-up terakhir, sampaikan tetap available jika butuh bantuan' : ''}
+
+Aturan:
+- Tulis seperti chat WhatsApp biasa
+- Maksimal 2-3 kalimat, 1-2 emoji
+- Jangan gunakan markdown
+- Jangan menyebut bahwa kamu AI/bot
+- Personalisasikan berdasarkan percakapan sebelumnya`;
+
+        const aiRes = await fetch(`${aiProvider.baseUrl}/chat/completions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${aiProvider.apiKeyEncrypted}` },
+          body: JSON.stringify({
+            model: aiProvider.model,
+            messages: [{ role: 'system', content: systemPrompt }, ...chatHistory],
+            max_tokens: 200,
+            temperature: 0.8,
+          }),
+        });
+        const aiData = await aiRes.json() as any;
+        if (aiData.choices?.[0]?.message?.content) {
+          followUpMessage = aiData.choices[0].message.content;
+        }
+      } catch (err: any) {
+        console.error(`[Follow-Up] AI error conv ${conv.id}:`, err.message);
+      }
+
+      const phone = conv.contact?.phone;
+      if (!phone) continue;
+
+      // Human-like delay
+      await sleep(calculateTypingDelay(followUpMessage));
+
+      // Send via WhatsApp
+      try {
+        await fetch(`${waConfig.apiBaseUrl}/${waConfig.phoneNumberId}/messages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${waConfig.apiKeyEncrypted}` },
+          body: JSON.stringify({ messaging_product: 'whatsapp', to: phone, type: 'text', text: { body: followUpMessage } }),
+        });
+      } catch (err: any) {
+        console.error(`[Follow-Up] Send error ${phone}:`, err.message);
+        continue;
+      }
+
+      // Save message
+      await prisma.message.create({
+        data: {
+          conversationId: conv.id, direction: 'OUTBOUND', type: 'TEXT',
+          content: followUpMessage, deliveryStatus: 'PENDING', isFromAi: true,
+          metadata: { isFollowUp: true, followUpNumber: followUpCount + 1 },
+          sentAt: new Date(),
+        },
+      });
+
+      // Update metadata
+      const history = metadata.followUpHistory || [];
+      history.push({ sentAt: new Date().toISOString(), message: followUpMessage.slice(0, 100), number: followUpCount + 1 });
+
+      await prisma.conversation.update({
+        where: { id: conv.id },
+        data: {
+          metadata: { ...metadata, followUpCount: followUpCount + 1, lastFollowUpAt: new Date().toISOString(), followUpHistory: history },
+        },
+      });
+
+      console.log(`[Follow-Up] Sent #${followUpCount + 1} to ${conv.contact?.name || phone}`);
+    }
+  } catch (err: any) {
+    console.error('[Follow-Up] Engine error:', err.message);
+  }
+}
+
 export async function GET() {
   return NextResponse.json({ status: 'ok', message: 'Webhook active' });
 }
+
