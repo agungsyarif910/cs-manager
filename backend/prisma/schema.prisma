@@ -104,6 +104,14 @@ enum BroadcastLogStatus {
   FAILED
 }
 
+enum RegistrationStatus {
+  PENDING
+  WAITING_PAYMENT
+  PAID
+  EXPIRED
+  CANCELLED
+}
+
 enum Channel {
   TELEGRAM
   EMAIL
@@ -137,6 +145,7 @@ model Company {
   auditLogs            AuditLog[]
   notifications        Notification[]
   companySettings      Setting[]
+  registrations        Registration[]
 
   @@map("companies")
 }
@@ -221,6 +230,7 @@ model Contact {
   updatedAt            DateTime               @updatedAt
   conversations        Conversation[]
   broadcastLogs        BroadcastLog[]
+  registrations        Registration[]
 
   @@unique([phone, companyId])
   @@index([companyId])
@@ -470,4 +480,29 @@ model Setting {
   @@unique([companyId, key])
   @@index([companyId])
   @@map("settings")
+}
+
+model Registration {
+  id                   String                 @id @default(uuid())
+  companyId            String
+  company              Company                @relation(fields: [companyId], references: [id])
+  contactId            String?
+  contact              Contact?               @relation(fields: [contactId], references: [id])
+  conversationId       String?
+  name                 String
+  phone                String
+  program              String
+  status               RegistrationStatus     @default(PENDING)
+  paymentDeadline      DateTime
+  paymentAmount        Float?
+  paymentNote          String?
+  paidAt               DateTime?
+  validatedBy          String?
+  metadata             Json?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+
+  @@index([companyId])
+  @@index([status])
+  @@map("registrations")
 }

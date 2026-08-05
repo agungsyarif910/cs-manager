@@ -54,7 +54,18 @@ function buildHumanLikePrompt(basePrompt: string, agent?: any): string {
 - Jangan menyebut bahwa kamu adalah AI/bot/asisten virtual
 - Jangan gunakan frasa template yang kaku
 - Jangan berikan disclaimer panjang
-- Jangan gunakan bullet points berlebihan`;
+- Jangan gunakan bullet points berlebihan
+
+### Pendaftaran/Registrasi:
+- Jika customer ingin MENDAFTAR/DAFTAR ke suatu program/kelas, kumpulkan data berikut:
+  1. Nama lengkap
+  2. Nomor HP yang aktif
+  3. Program atau kelas yang ingin diikuti
+- Setelah SEMUA data lengkap (nama, HP, program), WAJIB tambahkan tag berikut di AKHIR pesan kamu (SETELAH pesan normal):
+  [REGISTRATION:{"name":"Nama Lengkap","phone":"08xxxx","program":"Nama Program"}]
+- Tag ini TIDAK akan terlihat oleh customer, jadi tulis pesan konfirmasi seperti biasa LALU tambahkan tag di baris terakhir
+- Jangan minta data yang sudah diberikan sebelumnya di chat
+- HANYA output tag [REGISTRATION:...] SATU KALI saat data pertama kali lengkap`;
 
   return prompt;
 }
@@ -301,6 +312,40 @@ export async function POST(request: NextRequest) {
           aiReply = aiData.choices[0].message.content;
         }
       } catch (err: any) { console.error('AI Error:', err.message); }
+    }
+
+    // ========== DETECT REGISTRATION FROM AI REPLY ==========
+    const regMatch = aiReply.match(/\[REGISTRATION:\s*(\{.*?\})\]/s);
+    if (regMatch) {
+      try {
+        const regData = JSON.parse(regMatch[1]);
+        if (regData.name && regData.phone && regData.program) {
+          // Load registration settings for deadline
+          const regSettings = await prisma.setting.findFirst({ where: { companyId, key: 'registration_config' } });
+          const deadlineHours = (regSettings?.value as any)?.deadlineHours || 24;
+
+          const deadline = new Date();
+          deadline.setHours(deadline.getHours() + deadlineHours);
+
+          await prisma.registration.create({
+            data: {
+              companyId,
+              contactId: dbContact.id,
+              conversationId: conversation.id,
+              name: regData.name,
+              phone: regData.phone,
+              program: regData.program,
+              status: 'PENDING',
+              paymentDeadline: deadline,
+            },
+          });
+          console.log(`[Registration] Saved: ${regData.name} - ${regData.program}`);
+        }
+      } catch (err: any) {
+        console.error('[Registration] Parse error:', err.message);
+      }
+      // Strip tag from message
+      aiReply = aiReply.replace(/\[REGISTRATION:\s*\{.*?\}\]/s, '').trim();
     }
 
     // ========== HUMAN-LIKE: Typing Delay ==========

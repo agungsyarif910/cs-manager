@@ -16,7 +16,8 @@ import {
   UserCog,
   Shield,
   Settings,
-  ChevronLeft
+  ChevronLeft,
+  ClipboardList
 } from "lucide-react";
 import { useState } from "react";
 
@@ -24,6 +25,7 @@ const navItems = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Conversations", href: "/conversations", icon: MessageSquare },
   { name: "Contacts", href: "/contacts", icon: Users },
+  { name: "Registrations", href: "/registrations", icon: ClipboardList },
   { name: "Knowledge Base", href: "/knowledge-base", icon: BookOpen },
   { name: "AI Agents", href: "/ai-agents", icon: Bot },
   { name: "Workflow", href: "/workflow", icon: GitBranch },
