@@ -57,6 +57,17 @@ export default function SettingsPage() {
     enableEmail: false,
   });
 
+  const [followUpConfig, setFollowUpConfig] = useState({
+    enabled: false,
+    interval1Hours: 3,
+    interval2Hours: 24,
+    interval3Hours: 72,
+    maxFollowUps: 3,
+    workingHourStart: 8,
+    workingHourEnd: 20,
+    followUpPrompt: "Kamu sedang mengirim pesan follow-up kepada customer yang sebelumnya bertanya namun belum membalas. Berdasarkan percakapan sebelumnya, kirim pesan follow-up yang ramah dan natural. Tanyakan apakah mereka masih tertarik atau butuh bantuan lebih lanjut. Jangan terlalu memaksa.",
+  });
+
   useEffect(() => {
     let cancelled = false;
     async function load() {
@@ -72,6 +83,7 @@ export default function SettingsPage() {
         if (settings.whatsapp_config) setWaConfig(prev => ({ ...prev, ...settings.whatsapp_config }));
         if (settings.notifications) setNotifConfig(prev => ({ ...prev, ...settings.notifications }));
         if (settings.handler_mode?.mode) setHandlerMode(settings.handler_mode.mode);
+        if (settings.follow_up_config) setFollowUpConfig(prev => ({ ...prev, ...settings.follow_up_config }));
       } catch (e) {
         console.error("Failed to load settings:", e);
       } finally {
@@ -114,6 +126,7 @@ export default function SettingsPage() {
     { id: "ai", label: "AI Config" },
     { id: "whatsapp", label: "WhatsApp API" },
     { id: "notifications", label: "Notifications" },
+    { id: "followup", label: "🔄 Follow-Up" },
   ];
 
   const textareaClass = "flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
@@ -434,6 +447,76 @@ export default function SettingsPage() {
                   </div>
                   <Button disabled={saving === "notifications"} onClick={() => handleSave("Notifications", "notifications", notifConfig)}>
                     {saving === "notifications" ? "Menyimpan..." : "💾 Simpan Notifications"}
+                  </Button>
+                </CardContent>
+              </Card>
+            </>
+          )}
+
+          {activeTab === "followup" && (
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle>🔄 Auto Follow-Up</CardTitle>
+                  <CardDescription>AI akan otomatis follow-up customer yang pernah bertanya tapi tidak membalas lagi.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  <div className="flex items-center gap-3">
+                    <input type="checkbox" id="fuEnabled" checked={followUpConfig.enabled} onChange={e => setFollowUpConfig({...followUpConfig, enabled: e.target.checked})} className="h-4 w-4" />
+                    <Label htmlFor="fuEnabled" className="font-medium">Aktifkan Auto Follow-Up</Label>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <p className="text-sm font-medium mb-3">⏱️ Interval Follow-Up</p>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label>Follow-up ke-1 (jam)</Label>
+                        <Input type="number" min="1" value={followUpConfig.interval1Hours} onChange={e => setFollowUpConfig({...followUpConfig, interval1Hours: parseInt(e.target.value) || 1})} />
+                        <p className="text-xs text-muted-foreground">Setelah customer tidak reply</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Follow-up ke-2 (jam)</Label>
+                        <Input type="number" min="1" value={followUpConfig.interval2Hours} onChange={e => setFollowUpConfig({...followUpConfig, interval2Hours: parseInt(e.target.value) || 1})} />
+                        <p className="text-xs text-muted-foreground">Setelah follow-up ke-1</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Follow-up ke-3 (jam)</Label>
+                        <Input type="number" min="1" value={followUpConfig.interval3Hours} onChange={e => setFollowUpConfig({...followUpConfig, interval3Hours: parseInt(e.target.value) || 1})} />
+                        <p className="text-xs text-muted-foreground">Setelah follow-up ke-2</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label>Maks Follow-Up</Label>
+                        <Input type="number" min="1" max="10" value={followUpConfig.maxFollowUps} onChange={e => setFollowUpConfig({...followUpConfig, maxFollowUps: parseInt(e.target.value) || 1})} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Jam Mulai Kirim</Label>
+                        <Input type="number" min="0" max="23" value={followUpConfig.workingHourStart} onChange={e => setFollowUpConfig({...followUpConfig, workingHourStart: parseInt(e.target.value) || 0})} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Jam Selesai Kirim</Label>
+                        <Input type="number" min="0" max="23" value={followUpConfig.workingHourEnd} onChange={e => setFollowUpConfig({...followUpConfig, workingHourEnd: parseInt(e.target.value) || 23})} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t pt-4 space-y-2">
+                    <Label>Prompt Follow-Up (instruksi untuk AI)</Label>
+                    <textarea
+                      className={textareaClass}
+                      rows={4}
+                      value={followUpConfig.followUpPrompt}
+                      onChange={e => setFollowUpConfig({...followUpConfig, followUpPrompt: e.target.value})}
+                    />
+                    <p className="text-xs text-muted-foreground">AI akan membaca history chat sebelumnya dan membuat pesan follow-up berdasarkan instruksi ini.</p>
+                  </div>
+
+                  <Button disabled={saving === "follow_up_config"} onClick={() => handleSave("Follow-Up", "follow_up_config", followUpConfig)}>
+                    {saving === "follow_up_config" ? "Menyimpan..." : "💾 Simpan Follow-Up Config"}
                   </Button>
                 </CardContent>
               </Card>

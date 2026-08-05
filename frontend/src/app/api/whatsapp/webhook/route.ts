@@ -222,6 +222,16 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    // Reset follow-up counter when customer replies
+    const convMeta = (conversation.metadata as any) || {};
+    if (convMeta.followUpCount && convMeta.followUpCount > 0) {
+      await prisma.conversation.update({
+        where: { id: conversation.id },
+        data: { metadata: { ...convMeta, followUpCount: 0, lastFollowUpAt: null } }
+      });
+      console.log(`[Webhook] Reset follow-up counter for conv ${conversation.id}`);
+    }
+
     // ========== SKIP AI IF HUMAN_HANDLING ==========
     // Only skip if conversation is explicitly assigned to a human agent OR global mode is HUMAN
     if (conversation.status === 'HUMAN_HANDLING' || conversation.handlerType === 'HUMAN') {
