@@ -520,6 +520,40 @@ export default function SettingsPage() {
                   </Button>
                 </CardContent>
               </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>🧪 Test & Manual Trigger</CardTitle>
+                  <CardDescription>Jalankan follow-up engine secara manual untuk mengirim follow-up ke percakapan yang eligible.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Button
+                    variant="outline"
+                    disabled={saving === "test_followup"}
+                    onClick={async () => {
+                      setSaving("test_followup");
+                      setMessage("");
+                      try {
+                        const res = await api.post("/follow-up/process");
+                        const d = res.data;
+                        if (d.totalSent > 0) {
+                          setMessage(`✅ Follow-up terkirim: ${d.totalSent} pesan. ${JSON.stringify(d.results)}`);
+                        } else {
+                          setMessage(`ℹ️ Tidak ada percakapan yang perlu di-follow-up saat ini. ${JSON.stringify(d.results)}`);
+                        }
+                      } catch (err: any) {
+                        setMessage(`❌ Error: ${err.response?.data?.message || err.message}`);
+                      }
+                      setSaving("");
+                    }}
+                  >
+                    {saving === "test_followup" ? "⏳ Memproses..." : "🚀 Jalankan Follow-Up Sekarang"}
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    Secara otomatis, follow-up dijalankan setiap jam oleh Vercel Cron. Gunakan tombol ini untuk menjalankan secara manual.
+                  </p>
+                </CardContent>
+              </Card>
             </>
           )}
         </div>
