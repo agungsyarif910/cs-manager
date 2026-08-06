@@ -15,13 +15,13 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:30px_30px]" />
         <div className="relative z-20">
           <div className="flex items-center space-x-3">
-            <div className="h-12 w-12 rounded-xl overflow-hidden bg-white/20 backdrop-blur-sm shadow-lg ring-1 ring-white/30 flex-shrink-0">
-              <img
-                src="/logo-akuanalis.jpg"
-                alt="Akuanalis Logo"
-                className="h-full w-full object-cover"
-              />
-            </div>
+            <img
+              src="/logo-akuanalis.jpg"
+              alt="Akuanalis"
+              width={48}
+              height={48}
+              style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'cover', flexShrink: 0, boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
+            />
             <span className="text-xl font-bold tracking-tight">AI CS Manager</span>
           </div>
         </div>
@@ -61,24 +61,24 @@ export default function LoginPage() {
           <div className="flex flex-col space-y-2 text-center">
             {/* Mobile logo */}
             <div className="flex items-center justify-center space-x-3 lg:hidden mb-4">
-              <div className="h-10 w-10 rounded-xl overflow-hidden shadow-md ring-1 ring-border flex-shrink-0">
-                <img
-                  src="/logo-akuanalis.jpg"
-                  alt="Akuanalis Logo"
-                  className="h-full w-full object-cover"
-                />
-              </div>
+              <img
+                src="/logo-akuanalis.jpg"
+                alt="Akuanalis"
+                width={40}
+                height={40}
+                style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }}
+              />
               <span className="font-bold text-xl">AI CS Manager</span>
             </div>
             {/* Desktop logo above form */}
-            <div className="hidden lg:flex justify-center mb-2">
-              <div className="h-16 w-16 rounded-2xl overflow-hidden shadow-lg ring-1 ring-border/50">
-                <img
-                  src="/logo-akuanalis.jpg"
-                  alt="Akuanalis Logo"
-                  className="h-full w-full object-cover"
-                />
-              </div>
+            <div className="hidden lg:flex justify-center mb-3">
+              <img
+                src="/logo-akuanalis.jpg"
+                alt="Akuanalis"
+                width={72}
+                height={72}
+                style={{ width: 72, height: 72, borderRadius: 16, objectFit: 'cover', boxShadow: '0 4px 16px rgba(0,0,0,0.1)' }}
+              />
             </div>
             <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
             <p className="text-sm text-muted-foreground">
