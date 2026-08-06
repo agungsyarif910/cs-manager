@@ -21,6 +21,9 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
+// ✏️ Ganti nama aplikasi di sini
+const APP_NAME = "AI CS Manager";
+
 const navItems = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Conversations", href: "/conversations", icon: MessageSquare },
@@ -49,29 +52,8 @@ export function Sidebar() {
       )}
     >
       <div className="flex h-16 items-center justify-between px-4 border-b">
-        {!collapsed && (
-          <div className="flex items-center space-x-2.5 min-w-0">
-            <img
-              src="/logo-akuanalis.jpg"
-              alt="Akuanalis"
-              width={36}
-              height={36}
-              style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }}
-            />
-            <span className="font-bold text-lg bg-gradient-to-r from-primary to-emerald-500 bg-clip-text text-transparent truncate">AI CS Manager</span>
-          </div>
-        )}
-        {collapsed && (
-          <div className="mx-auto">
-            <img
-              src="/logo-akuanalis.jpg"
-              alt="Akuanalis"
-              width={36}
-              height={36}
-              style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover' }}
-            />
-          </div>
-        )}
+        {!collapsed && <span className="font-bold text-lg bg-gradient-to-r from-primary to-emerald-500 bg-clip-text text-transparent">{APP_NAME}</span>}
+        {collapsed && <span className="font-bold text-lg text-primary ml-1">{APP_NAME.substring(0, 2)}</span>}
         <button 
           onClick={() => setCollapsed(!collapsed)}
           className="p-1 rounded-md hover:bg-muted"

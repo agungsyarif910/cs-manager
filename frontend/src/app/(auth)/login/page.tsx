@@ -1,6 +1,8 @@
 import { Metadata } from "next";
+import Image from "next/image";
 import { LoginForm } from "./components/login-form";
 import { Bot, MessageSquare, Zap, Shield } from "lucide-react";
+import logoImg from "../../../../public/logo-akuanalis.jpg";
 
 export const metadata: Metadata = {
   title: "Login - AI Customer Service Manager",
@@ -15,12 +17,14 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:30px_30px]" />
         <div className="relative z-20">
           <div className="flex items-center space-x-3">
-            <img
-              src="/logo-akuanalis.jpg"
+            <Image
+              src={logoImg}
               alt="Akuanalis"
               width={48}
               height={48}
-              style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'cover', flexShrink: 0, boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
+              className="rounded-xl shadow-lg flex-shrink-0"
+              style={{ objectFit: 'cover' }}
+              priority
             />
             <span className="text-xl font-bold tracking-tight">AI CS Manager</span>
           </div>
@@ -61,23 +65,27 @@ export default function LoginPage() {
           <div className="flex flex-col space-y-2 text-center">
             {/* Mobile logo */}
             <div className="flex items-center justify-center space-x-3 lg:hidden mb-4">
-              <img
-                src="/logo-akuanalis.jpg"
+              <Image
+                src={logoImg}
                 alt="Akuanalis"
                 width={40}
                 height={40}
-                style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }}
+                className="rounded-xl shadow-md flex-shrink-0"
+                style={{ objectFit: 'cover' }}
+                priority
               />
               <span className="font-bold text-xl">AI CS Manager</span>
             </div>
             {/* Desktop logo above form */}
             <div className="hidden lg:flex justify-center mb-3">
-              <img
-                src="/logo-akuanalis.jpg"
+              <Image
+                src={logoImg}
                 alt="Akuanalis"
                 width={72}
                 height={72}
-                style={{ width: 72, height: 72, borderRadius: 16, objectFit: 'cover', boxShadow: '0 4px 16px rgba(0,0,0,0.1)' }}
+                className="rounded-2xl shadow-lg"
+                style={{ objectFit: 'cover' }}
+                priority
               />
             </div>
             <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
