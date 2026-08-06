@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -52,24 +51,22 @@ export function Sidebar() {
       <div className="flex h-16 items-center justify-between px-4 border-b">
         {!collapsed && (
           <div className="flex items-center space-x-2.5 min-w-0">
-            <div className="relative h-8 w-8 rounded-lg overflow-hidden shadow-sm ring-1 ring-border/50 flex-shrink-0">
-              <Image
+            <div className="h-8 w-8 rounded-lg overflow-hidden shadow-sm ring-1 ring-border/50 flex-shrink-0">
+              <img
                 src="/logo-akuanalis.jpg"
                 alt="Akuanalis Logo"
-                fill
-                className="object-cover"
+                className="h-full w-full object-cover"
               />
             </div>
             <span className="font-bold text-lg bg-gradient-to-r from-primary to-emerald-500 bg-clip-text text-transparent truncate">AI CS Manager</span>
           </div>
         )}
         {collapsed && (
-          <div className="relative h-8 w-8 rounded-lg overflow-hidden shadow-sm ring-1 ring-border/50 mx-auto">
-            <Image
+          <div className="h-8 w-8 rounded-lg overflow-hidden shadow-sm ring-1 ring-border/50 mx-auto">
+            <img
               src="/logo-akuanalis.jpg"
               alt="Akuanalis Logo"
-              fill
-              className="object-cover"
+              className="h-full w-full object-cover"
             />
           </div>
         )}
@@ -113,4 +110,3 @@ export function Sidebar() {
     </div>
   );
 }
-

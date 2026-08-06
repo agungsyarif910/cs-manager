@@ -1,5 +1,4 @@
 import { Metadata } from "next";
-import Image from "next/image";
 import { LoginForm } from "./components/login-form";
 import { Bot, MessageSquare, Zap, Shield } from "lucide-react";
 
@@ -16,13 +15,11 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:30px_30px]" />
         <div className="relative z-20">
           <div className="flex items-center space-x-3">
-            <div className="relative h-12 w-12 rounded-xl overflow-hidden bg-white/20 backdrop-blur-sm shadow-lg ring-1 ring-white/30 flex-shrink-0">
-              <Image
+            <div className="h-12 w-12 rounded-xl overflow-hidden bg-white/20 backdrop-blur-sm shadow-lg ring-1 ring-white/30 flex-shrink-0">
+              <img
                 src="/logo-akuanalis.jpg"
                 alt="Akuanalis Logo"
-                fill
-                className="object-cover"
-                priority
+                className="h-full w-full object-cover"
               />
             </div>
             <span className="text-xl font-bold tracking-tight">AI CS Manager</span>
@@ -64,26 +61,22 @@ export default function LoginPage() {
           <div className="flex flex-col space-y-2 text-center">
             {/* Mobile logo */}
             <div className="flex items-center justify-center space-x-3 lg:hidden mb-4">
-              <div className="relative h-10 w-10 rounded-xl overflow-hidden shadow-md ring-1 ring-border flex-shrink-0">
-                <Image
+              <div className="h-10 w-10 rounded-xl overflow-hidden shadow-md ring-1 ring-border flex-shrink-0">
+                <img
                   src="/logo-akuanalis.jpg"
                   alt="Akuanalis Logo"
-                  fill
-                  className="object-cover"
-                  priority
+                  className="h-full w-full object-cover"
                 />
               </div>
               <span className="font-bold text-xl">AI CS Manager</span>
             </div>
             {/* Desktop logo above form */}
             <div className="hidden lg:flex justify-center mb-2">
-              <div className="relative h-16 w-16 rounded-2xl overflow-hidden shadow-lg ring-1 ring-border/50">
-                <Image
+              <div className="h-16 w-16 rounded-2xl overflow-hidden shadow-lg ring-1 ring-border/50">
+                <img
                   src="/logo-akuanalis.jpg"
                   alt="Akuanalis Logo"
-                  fill
-                  className="object-cover"
-                  priority
+                  className="h-full w-full object-cover"
                 />
               </div>
             </div>
