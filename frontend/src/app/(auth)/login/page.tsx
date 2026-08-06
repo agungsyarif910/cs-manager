@@ -20,8 +20,8 @@ export default function LoginPage() {
             <Image
               src={logoImg}
               alt="Akuanalis"
-              width={48}
-              height={48}
+              width={64}
+              height={64}
               className="rounded-xl shadow-lg flex-shrink-0"
               style={{ objectFit: 'cover' }}
               priority
@@ -68,8 +68,8 @@ export default function LoginPage() {
               <Image
                 src={logoImg}
                 alt="Akuanalis"
-                width={40}
-                height={40}
+                width={48}
+                height={48}
                 className="rounded-xl shadow-md flex-shrink-0"
                 style={{ objectFit: 'cover' }}
                 priority
@@ -81,8 +81,8 @@ export default function LoginPage() {
               <Image
                 src={logoImg}
                 alt="Akuanalis"
-                width={72}
-                height={72}
+                width={110}
+                height={110}
                 className="rounded-2xl shadow-lg"
                 style={{ objectFit: 'cover' }}
                 priority
