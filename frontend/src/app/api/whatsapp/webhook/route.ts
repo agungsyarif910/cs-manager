@@ -315,7 +315,7 @@ export async function POST(request: NextRequest) {
     }
 
     // ========== DETECT REGISTRATION FROM AI REPLY ==========
-    const regMatch = aiReply.match(/\[REGISTRATION:\s*(\{.*?\})\]/s);
+    const regMatch = aiReply.match(/\[REGISTRATION:\s*(\{[\s\S]*?\})\]/);
     if (regMatch) {
       try {
         const regData = JSON.parse(regMatch[1]);
@@ -345,7 +345,7 @@ export async function POST(request: NextRequest) {
         console.error('[Registration] Parse error:', err.message);
       }
       // Strip tag from message
-      aiReply = aiReply.replace(/\[REGISTRATION:\s*\{.*?\}\]/s, '').trim();
+      aiReply = aiReply.replace(/\[REGISTRATION:\s*\{[\s\S]*?\}\]/, '').trim();
     }
 
     // ========== HUMAN-LIKE: Typing Delay ==========
