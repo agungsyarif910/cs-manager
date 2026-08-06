@@ -88,14 +88,6 @@ enum TemplateCategory {
   BROADCAST
 }
 
-enum TriggerType {
-  INSTANT
-  DELAYED
-  SCHEDULED
-  OUTSIDE_HOURS
-  HOLIDAY
-  BUSY
-}
 
 enum BroadcastStatus {
   DRAFT
@@ -110,6 +102,14 @@ enum BroadcastLogStatus {
   SENT
   DELIVERED
   FAILED
+}
+
+enum RegistrationStatus {
+  PENDING
+  WAITING_PAYMENT
+  PAID
+  EXPIRED
+  CANCELLED
 }
 
 enum Channel {
@@ -141,11 +141,11 @@ model Company {
   databaseConnections  DatabaseConnection[]
   workflows            Workflow[]
   templates            Template[]
-  autoReplies          AutoReply[]
   broadcasts           Broadcast[]
   auditLogs            AuditLog[]
   notifications        Notification[]
   companySettings      Setting[]
+  registrations        Registration[]
 
   @@map("companies")
 }
@@ -230,6 +230,7 @@ model Contact {
   updatedAt            DateTime               @updatedAt
   conversations        Conversation[]
   broadcastLogs        BroadcastLog[]
+  registrations        Registration[]
 
   @@unique([phone, companyId])
   @@index([companyId])
@@ -400,20 +401,6 @@ model Template {
   @@map("templates")
 }
 
-model AutoReply {
-  id                   String                 @id @default(uuid())
-  companyId            String
-  company              Company                @relation(fields: [companyId], references: [id])
-  triggerType          TriggerType            @default(INSTANT)
-  message              String
-  delayMs              Int                    @default(0)
-  schedule             Json?
-  isActive             Boolean                @default(true)
-  createdAt            DateTime               @default(now())
-
-  @@index([companyId])
-  @@map("auto_replies")
-}
 
 model Broadcast {
   id                   String                 @id @default(uuid())
@@ -493,4 +480,29 @@ model Setting {
   @@unique([companyId, key])
   @@index([companyId])
   @@map("settings")
+}
+
+model Registration {
+  id                   String                 @id @default(uuid())
+  companyId            String
+  company              Company                @relation(fields: [companyId], references: [id])
+  contactId            String?
+  contact              Contact?               @relation(fields: [contactId], references: [id])
+  conversationId       String?
+  name                 String
+  phone                String
+  program              String
+  status               RegistrationStatus     @default(PENDING)
+  paymentDeadline      DateTime
+  paymentAmount        Float?
+  paymentNote          String?
+  paidAt               DateTime?
+  validatedBy          String?
+  metadata             Json?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+
+  @@index([companyId])
+  @@index([status])
+  @@map("registrations")
 }
