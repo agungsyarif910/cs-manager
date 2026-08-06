@@ -3,9 +3,10 @@ import Image from "next/image";
 import { LoginForm } from "./components/login-form";
 import { Bot, MessageSquare, Zap, Shield } from "lucide-react";
 import logoImg from "../../../../public/logo-akuanalis.jpg";
+import { APP_CONFIG } from "@/lib/config";
 
 export const metadata: Metadata = {
-  title: "Login - AI Customer Service Manager",
+  title: `Login - ${APP_CONFIG.appName}`,
   description: "Sign in to manage your AI WhatsApp agents",
 };
 
@@ -26,7 +27,7 @@ export default function LoginPage() {
               style={{ objectFit: 'cover' }}
               priority
             />
-            <span className="text-xl font-bold tracking-tight">AI CS Manager</span>
+            <span className="text-xl font-bold tracking-tight">{APP_CONFIG.appName}</span>
           </div>
         </div>
         
@@ -74,7 +75,7 @@ export default function LoginPage() {
                 style={{ objectFit: 'cover' }}
                 priority
               />
-              <span className="font-bold text-xl">AI CS Manager</span>
+              <span className="font-bold text-xl">{APP_CONFIG.appName}</span>
             </div>
             {/* Desktop logo above form */}
             <div className="hidden lg:flex justify-center mb-3">

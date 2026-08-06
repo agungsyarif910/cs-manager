@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { APP_CONFIG } from "@/lib/config";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -21,8 +22,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-// ✏️ Ganti nama aplikasi di sini
-const APP_NAME = "AI CS Manager";
+const { appName, copyrightYear, copyrightName } = APP_CONFIG;
 
 const navItems = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -52,8 +52,8 @@ export function Sidebar() {
       )}
     >
       <div className="flex h-16 items-center justify-between px-4 border-b">
-        {!collapsed && <span className="font-bold text-lg bg-gradient-to-r from-primary to-emerald-500 bg-clip-text text-transparent">{APP_NAME}</span>}
-        {collapsed && <span className="font-bold text-lg text-primary ml-1">{APP_NAME.substring(0, 2)}</span>}
+        {!collapsed && <span className="font-bold text-lg bg-gradient-to-r from-primary to-emerald-500 bg-clip-text text-transparent">{appName}</span>}
+        {collapsed && <span className="font-bold text-lg text-primary ml-1">{appName.substring(0, 2)}</span>}
         <button 
           onClick={() => setCollapsed(!collapsed)}
           className="p-1 rounded-md hover:bg-muted"
@@ -87,7 +87,7 @@ export function Sidebar() {
       <div className="p-4 border-t">
         {!collapsed && (
           <div className="text-xs text-muted-foreground text-center">
-            &copy; 2026 WhatsApp Service
+            &copy; {copyrightYear} {copyrightName}
           </div>
         )}
       </div>
