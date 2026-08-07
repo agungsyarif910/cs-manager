@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, ArrowLeft, Bot, User, Clock, MessageSquare, RefreshCw, ArrowUpDown, Eye } from "lucide-react";
+import { Search, ArrowLeft, Bot, User, Clock, MessageSquare, RefreshCw, ArrowUpDown, Eye, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import api from "@/lib/api";
 
@@ -210,6 +210,9 @@ export default function ConversationsPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Conversations</h1>
         <p className="text-muted-foreground">Lihat semua percakapan customer & AI.</p>
+        <p className="text-xs text-primary/70 mt-1 md:hidden flex items-center gap-1">
+          <Eye className="h-3 w-3" /> Ketuk baris percakapan untuk lihat detail chat
+        </p>
       </div>
 
       <div className="flex items-center space-x-2">
@@ -245,6 +248,7 @@ export default function ConversationsPage() {
               <TableHead>Handler</TableHead>
               <TableHead>Pesan Terakhir</TableHead>
               <TableHead>Tanggal</TableHead>
+              <TableHead className="w-8"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -289,11 +293,14 @@ export default function ConversationsPage() {
                       </span>
                     </div>
                   </TableCell>
+                  <TableCell className="w-8 pr-2">
+                    <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary transition-colors" />
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
                   {search ? 'Tidak ada hasil' : 'Belum ada percakapan'}
                 </TableCell>
               </TableRow>
