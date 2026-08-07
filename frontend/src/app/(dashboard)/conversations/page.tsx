@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, ArrowLeft, Bot, User, Clock, MessageSquare, RefreshCw } from "lucide-react";
+import { Search, ArrowLeft, Bot, User, Clock, MessageSquare, RefreshCw, ArrowUpDown, Eye } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import api from "@/lib/api";
 
@@ -48,6 +48,7 @@ export default function ConversationsPage() {
   const [search, setSearch] = useState("");
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState("");
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
   useEffect(() => {
     loadConversations();
@@ -128,10 +129,21 @@ export default function ConversationsPage() {
 
         <Card className="glass">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
-              <MessageSquare className="h-4 w-4" />
-              {selected.messages?.length || 0} pesan
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
+                <MessageSquare className="h-4 w-4" />
+                {selected.messages?.length || 0} pesan
+              </CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
+                className="gap-1.5 text-xs"
+              >
+                <ArrowUpDown className="h-3.5 w-3.5" />
+                {sortOrder === 'newest' ? 'Terbaru dulu' : 'Terlama dulu'}
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
@@ -142,7 +154,13 @@ export default function ConversationsPage() {
                   </div>
                 ))
               ) : selected.messages?.length > 0 ? (
-                selected.messages.map((msg) => (
+                [...selected.messages]
+                  .sort((a, b) => {
+                    const dateA = new Date(a.createdAt).getTime();
+                    const dateB = new Date(b.createdAt).getTime();
+                    return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+                  })
+                  .map((msg) => (
                   <div key={msg.id} className={`flex ${msg.direction === 'INBOUND' ? 'justify-start' : 'justify-end'}`}>
                     <div className={`max-w-[70%] rounded-2xl px-4 py-3 ${
                       msg.direction === 'INBOUND'
@@ -245,7 +263,7 @@ export default function ConversationsPage() {
               filtered.map((conv) => (
                 <TableRow
                   key={conv.id}
-                  className="cursor-pointer hover:bg-muted/50"
+                  className="cursor-pointer hover:bg-muted/50 group transition-colors"
                   onClick={() => openConversation(conv.id)}
                 >
                   <TableCell className="font-medium">{conv.customer}</TableCell>
@@ -264,7 +282,12 @@ export default function ConversationsPage() {
                     {conv.lastMessage}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {formatDate(conv.createdAt)}
+                    <div className="flex items-center justify-between">
+                      <span>{formatDate(conv.createdAt)}</span>
+                      <span className="hidden group-hover:inline-flex items-center gap-1 text-xs text-primary ml-2">
+                        <Eye className="h-3 w-3" /> Lihat detail
+                      </span>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
