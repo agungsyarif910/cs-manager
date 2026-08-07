@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthStore } from "@/stores/auth-store";
 import api from "@/lib/api";
+import { toast } from "sonner";
 
 export function LoginForm({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   const router = useRouter();
@@ -31,6 +32,10 @@ export function LoginForm({ className, ...props }: React.HTMLAttributes<HTMLDivE
         name: user.name,
         email: user.email,
         role: user.role,
+      });
+
+      toast.success(`Selamat datang, ${user.name}! 👋`, {
+        description: "Anda berhasil masuk ke dashboard.",
       });
       
       router.push("/");
