@@ -6,15 +6,18 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
+import { useSettingsStore } from "@/stores/settings-store";
 
 type SettingsData = Record<string, any>;
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState("");
-  const [activeTab, setActiveTab] = useState("general");
+  const [activeTab, setActiveTab] = useState("branding");
   const [message, setMessage] = useState("");
   const [handlerMode, setHandlerMode] = useState<'AI' | 'HUMAN'>('AI');
+  const [branding, setBranding] = useState({ name: 'AI CS Manager' });
+  const settingsStore = useSettingsStore();
 
   const [general, setGeneral] = useState({
     companyName: "My Company",
@@ -84,6 +87,7 @@ export default function SettingsPage() {
         if (settings.notifications) setNotifConfig(prev => ({ ...prev, ...settings.notifications }));
         if (settings.handler_mode?.mode) setHandlerMode(settings.handler_mode.mode);
         if (settings.follow_up_config) setFollowUpConfig(prev => ({ ...prev, ...settings.follow_up_config }));
+        if (settings.app_name) setBranding(prev => ({ ...prev, ...settings.app_name }));
       } catch (e) {
         console.error("Failed to load settings:", e);
       } finally {
@@ -122,6 +126,7 @@ export default function SettingsPage() {
   }
 
   const tabs = [
+    { id: "branding", label: "🎨 Branding" },
     { id: "general", label: "General" },
     { id: "ai", label: "AI Config" },
     { id: "whatsapp", label: "WhatsApp API" },
@@ -130,6 +135,11 @@ export default function SettingsPage() {
   ];
 
   const textareaClass = "flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+
+  const handleBrandingSave = async () => {
+    await handleSave("Branding", "app_name", branding);
+    settingsStore.setAppName(branding.name);
+  };
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -141,14 +151,14 @@ export default function SettingsPage() {
         )}
       </div>
 
-      <div className="flex gap-6">
+      <div className="flex flex-col md:flex-row gap-6">
         {/* Sidebar Tabs */}
-        <div className="w-48 space-y-1 shrink-0">
+        <div className="flex md:flex-col md:w-48 gap-1 shrink-0 overflow-x-auto pb-2 md:pb-0">
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`whitespace-nowrap text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === tab.id
                   ? "bg-primary text-primary-foreground"
                   : "hover:bg-muted text-muted-foreground"
@@ -161,6 +171,32 @@ export default function SettingsPage() {
 
         {/* Content */}
         <div className="flex-1 space-y-4">
+          {/* Branding */}
+          {activeTab === "branding" && (
+            <Card>
+              <CardHeader>
+                <CardTitle>🎨 Branding</CardTitle>
+                <CardDescription>Ubah nama aplikasi yang tampil di sidebar, login, dan seluruh halaman.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Nama Aplikasi</Label>
+                  <Input
+                    value={branding.name}
+                    onChange={e => setBranding({ ...branding, name: e.target.value })}
+                    placeholder="Contoh: AI CS Manager"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Nama ini akan tampil di sidebar dashboard dan halaman login.
+                  </p>
+                </div>
+                <Button disabled={saving === "app_name"} onClick={handleBrandingSave}>
+                  {saving === "app_name" ? "Menyimpan..." : "💾 Simpan Branding"}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
           {/* General */}
           {activeTab === "general" && (
             <>

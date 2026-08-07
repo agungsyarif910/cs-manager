@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { APP_CONFIG } from "@/lib/config";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -18,11 +17,12 @@ import {
   Shield,
   Settings,
   ChevronLeft,
-  ClipboardList
+  ClipboardList,
+  X
 } from "lucide-react";
-import { useState } from "react";
-
-const { appName, copyrightYear, copyrightName } = APP_CONFIG;
+import { useState, useEffect } from "react";
+import { useSettingsStore } from "@/stores/settings-store";
+import { useSidebarStore } from "@/stores/sidebar-store";
 
 const navItems = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -40,23 +40,18 @@ const navItems = [
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
-export function Sidebar() {
+function SidebarContent({ collapsed, onCollapse, onNavClick }: { collapsed: boolean; onCollapse: () => void; onNavClick?: () => void }) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
+  const { appName } = useSettingsStore();
 
   return (
-    <div
-      className={cn(
-        "relative flex flex-col border-r bg-card/50 glass transition-all duration-300",
-        collapsed ? "w-20" : "w-64"
-      )}
-    >
+    <>
       <div className="flex h-16 items-center justify-between px-4 border-b">
         {!collapsed && <span className="font-bold text-lg bg-gradient-to-r from-primary to-emerald-500 bg-clip-text text-transparent">{appName}</span>}
         {collapsed && <span className="font-bold text-lg text-primary ml-1">{appName.substring(0, 2)}</span>}
-        <button 
-          onClick={() => setCollapsed(!collapsed)}
-          className="p-1 rounded-md hover:bg-muted"
+        <button
+          onClick={onCollapse}
+          className="p-1 rounded-md hover:bg-muted hidden md:block"
         >
           <ChevronLeft className={cn("h-5 w-5 transition-transform duration-300", collapsed && "rotate-180")} />
         </button>
@@ -64,15 +59,16 @@ export function Sidebar() {
 
       <nav className="flex-1 space-y-1 p-2 overflow-y-auto">
         {navItems.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(`${item.href}/`));
           return (
             <Link
               key={item.name}
               href={item.href}
+              onClick={onNavClick}
               className={cn(
                 "flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
-                isActive 
-                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" 
+                isActive
+                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 collapsed && "justify-center px-0"
               )}
@@ -83,14 +79,93 @@ export function Sidebar() {
           );
         })}
       </nav>
-      
+
       <div className="p-4 border-t">
         {!collapsed && (
           <div className="text-xs text-muted-foreground text-center">
-            &copy; {copyrightYear} {copyrightName}
+            &copy; 2026 WhatsApp Service
           </div>
         )}
       </div>
-    </div>
+    </>
+  );
+}
+
+export function Sidebar() {
+  const [collapsed, setCollapsed] = useState(false);
+  const { mobileOpen, setMobileOpen } = useSidebarStore();
+  const { loadSettings, loaded } = useSettingsStore();
+
+  useEffect(() => {
+    if (!loaded) loadSettings();
+  }, [loaded, loadSettings]);
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <div
+        className={cn(
+          "relative hidden md:flex flex-col border-r bg-card/50 glass transition-all duration-300",
+          collapsed ? "w-20" : "w-64"
+        )}
+      >
+        <SidebarContent
+          collapsed={collapsed}
+          onCollapse={() => setCollapsed(!collapsed)}
+        />
+      </div>
+
+      {/* Mobile Sidebar Overlay */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+            onClick={() => setMobileOpen(false)}
+          />
+          {/* Drawer */}
+          <div className="fixed inset-y-0 left-0 w-72 bg-card shadow-2xl border-r animate-in slide-in-from-left duration-300 flex flex-col">
+            <div className="flex h-16 items-center justify-between px-4 border-b">
+              <span className="font-bold text-lg bg-gradient-to-r from-primary to-emerald-500 bg-clip-text text-transparent">
+                {useSettingsStore.getState().appName}
+              </span>
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="p-1.5 rounded-md hover:bg-muted"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <nav className="flex-1 space-y-1 p-2 overflow-y-auto">
+              {navItems.map((item) => {
+                const pathname = window.location.pathname;
+                const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(`${item.href}/`));
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    className={cn(
+                      "flex items-center space-x-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    <item.icon className="h-5 w-5 shrink-0" />
+                    <span>{item.name}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+            <div className="p-4 border-t">
+              <div className="text-xs text-muted-foreground text-center">
+                &copy; 2026 WhatsApp Service
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

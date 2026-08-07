@@ -3,16 +3,27 @@ import Image from "next/image";
 import { LoginForm } from "./components/login-form";
 import { Bot, MessageSquare, Zap, Shield } from "lucide-react";
 import logoImg from "../../../../public/logo-akuanalis.jpg";
-import { APP_CONFIG } from "@/lib/config";
+import { prisma } from "@/lib/prisma";
+
+async function getAppName(): Promise<string> {
+  try {
+    const setting = await prisma.setting.findFirst({ where: { key: 'app_name' } });
+    return (setting?.value as any)?.name || 'AI CS Manager';
+  } catch {
+    return 'AI CS Manager';
+  }
+}
 
 export const metadata: Metadata = {
-  title: `Login - ${APP_CONFIG.appName}`,
+  title: "Login - AI CS Manager",
   description: "Sign in to manage your AI WhatsApp agents",
 };
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const appName = await getAppName();
+
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left Panel - Branding */}
       <div className="relative hidden lg:flex lg:w-1/2 flex-col bg-gradient-to-br from-primary via-blue-600 to-violet-600 p-12 text-white">
         <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:30px_30px]" />
@@ -20,14 +31,14 @@ export default function LoginPage() {
           <div className="flex items-center space-x-3">
             <Image
               src={logoImg}
-              alt="Akuanalis"
+              alt="Logo"
               width={64}
               height={64}
               className="rounded-xl shadow-lg flex-shrink-0"
               style={{ objectFit: 'cover' }}
               priority
             />
-            <span className="text-xl font-bold tracking-tight">{APP_CONFIG.appName}</span>
+            <span className="text-xl font-bold tracking-tight">{appName}</span>
           </div>
         </div>
         
@@ -61,33 +72,24 @@ export default function LoginPage() {
       </div>
       
       {/* Right Panel - Login Form */}
-      <div className="flex flex-1 items-center justify-center p-8 bg-background">
+      <div className="flex flex-1 items-center justify-center p-6 sm:p-8 bg-background min-h-screen lg:min-h-0">
         <div className="mx-auto w-full max-w-[380px] space-y-6">
           <div className="flex flex-col space-y-2 text-center">
-            {/* Mobile logo */}
-            <div className="flex items-center justify-center space-x-3 lg:hidden mb-4">
+            {/* Logo - always visible */}
+            <div className="flex justify-center mb-3">
               <Image
                 src={logoImg}
-                alt="Akuanalis"
-                width={48}
-                height={48}
-                className="rounded-xl shadow-md flex-shrink-0"
+                alt="Logo"
+                width={80}
+                height={80}
+                className="rounded-2xl shadow-lg lg:w-[110px] lg:h-[110px]"
                 style={{ objectFit: 'cover' }}
                 priority
               />
-              <span className="font-bold text-xl">{APP_CONFIG.appName}</span>
             </div>
-            {/* Desktop logo above form */}
-            <div className="hidden lg:flex justify-center mb-3">
-              <Image
-                src={logoImg}
-                alt="Akuanalis"
-                width={110}
-                height={110}
-                className="rounded-2xl shadow-lg"
-                style={{ objectFit: 'cover' }}
-                priority
-              />
+            {/* App name on mobile */}
+            <div className="lg:hidden">
+              <span className="font-bold text-xl text-primary">{appName}</span>
             </div>
             <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
             <p className="text-sm text-muted-foreground">
