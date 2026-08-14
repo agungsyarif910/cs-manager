@@ -31,8 +31,7 @@ const navItems = [
   { name: "Registrations", href: "/registrations", icon: ClipboardList },
   { name: "Knowledge Base", href: "/knowledge-base", icon: BookOpen },
   // AI Agents dihilangkan — sudah di-cover oleh Prompt Builder
-  { name: "Workflow", href: "/workflow", icon: GitBranch },
-  { name: "Templates", href: "/templates", icon: FileText },
+  // Workflow & Templates disembunyikan untuk saat ini
   { name: "Broadcast", href: "/broadcast", icon: Send },
   { name: "Prompt Builder", href: "/prompt-builder", icon: Wand2 },
   { name: "Users", href: "/users", icon: UserCog },
