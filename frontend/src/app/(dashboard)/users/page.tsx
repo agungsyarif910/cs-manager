@@ -21,6 +21,20 @@ interface User {
 
 const ROLES = ["OWNER", "SUPERVISOR", "CS", "VIEWER"];
 
+function checkPasswordStrength(password: string) {
+  const rules = [
+    { label: "Minimal 8 karakter", test: password.length >= 8 },
+    { label: "Huruf besar (A-Z)", test: /[A-Z]/.test(password) },
+    { label: "Huruf kecil (a-z)", test: /[a-z]/.test(password) },
+    { label: "Angka (0-9)", test: /[0-9]/.test(password) },
+    { label: "Karakter khusus (!@#$%^&*)", test: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) },
+  ];
+  const passed = rules.filter(r => r.test).length;
+  const strength = passed <= 2 ? 'weak' : passed <= 3 ? 'fair' : passed <= 4 ? 'good' : 'strong';
+  const isValid = passed === rules.length;
+  return { rules, passed, strength, isValid };
+}
+
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,6 +114,14 @@ export default function UsersPage() {
     if (dialogMode === 'add' && !formPassword) {
       setFormError("Password wajib diisi untuk user baru");
       return;
+    }
+
+    if (formPassword) {
+      const strength = checkPasswordStrength(formPassword);
+      if (!strength.isValid) {
+        setFormError("Password tidak memenuhi semua persyaratan keamanan");
+        return;
+      }
     }
 
     setSaving(true);
@@ -299,6 +321,36 @@ export default function UsersPage() {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+
+                {/* Password Strength Indicator */}
+                {formPassword && (() => {
+                  const { rules, strength } = checkPasswordStrength(formPassword);
+                  const colors = { weak: 'bg-red-500', fair: 'bg-orange-500', good: 'bg-yellow-500', strong: 'bg-emerald-500' };
+                  const labels = { weak: 'Lemah', fair: 'Cukup', good: 'Baik', strong: 'Kuat' };
+                  const widths = { weak: '25%', fair: '50%', good: '75%', strong: '100%' };
+                  return (
+                    <div className="mt-2 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                          <div className={`h-full rounded-full transition-all duration-300 ${colors[strength]}`} style={{ width: widths[strength] }} />
+                        </div>
+                        <span className={`text-xs font-medium ${
+                          strength === 'strong' ? 'text-emerald-500' :
+                          strength === 'good' ? 'text-yellow-500' :
+                          strength === 'fair' ? 'text-orange-500' : 'text-red-500'
+                        }`}>{labels[strength]}</span>
+                      </div>
+                      <div className="grid grid-cols-1 gap-0.5">
+                        {rules.map((rule, i) => (
+                          <div key={i} className={`text-xs flex items-center gap-1.5 ${rule.test ? 'text-emerald-500' : 'text-muted-foreground'}`}>
+                            <span>{rule.test ? '✓' : '○'}</span>
+                            {rule.label}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               <div>
