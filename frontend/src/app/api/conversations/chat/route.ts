@@ -51,22 +51,12 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ message: 'Hanya bisa kirim pesan saat mode Human' }, { status: 400 });
       }
 
-      // Get WhatsApp config
-      const settings = await prisma.setting.findMany({
-        where: {
-          companyId: user.companyId,
-          key: { in: ['wa_api_base_url', 'wa_phone_number_id', 'wa_api_key'] }
-        }
+      // Get WhatsApp config (same as webhook)
+      const waConfig = await prisma.whatsAppConfig.findFirst({
+        where: { companyId: user.companyId, isActive: true }
       });
 
-      const waConfig: any = {};
-      settings.forEach((s: any) => {
-        if (s.key === 'wa_api_base_url') waConfig.apiBaseUrl = s.value;
-        if (s.key === 'wa_phone_number_id') waConfig.phoneNumberId = s.value;
-        if (s.key === 'wa_api_key') waConfig.apiKey = s.value;
-      });
-
-      if (!waConfig.apiBaseUrl || !waConfig.phoneNumberId || !waConfig.apiKey) {
+      if (!waConfig || !waConfig.apiBaseUrl || !waConfig.phoneNumberId || !waConfig.apiKeyEncrypted) {
         return NextResponse.json({ message: 'Konfigurasi WhatsApp belum lengkap' }, { status: 400 });
       }
 
@@ -91,7 +81,7 @@ export async function POST(request: NextRequest) {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${waConfig.apiKey}`,
+            Authorization: `Bearer ${waConfig.apiKeyEncrypted}`,
           },
           body: JSON.stringify({
             messaging_product: 'whatsapp',
