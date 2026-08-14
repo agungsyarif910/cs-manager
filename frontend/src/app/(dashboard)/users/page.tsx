@@ -245,15 +245,23 @@ export default function UsersPage() {
                       >
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openDelete(user)}
-                        className="h-8 w-8 p-0 hover:bg-red-500/10 text-muted-foreground hover:text-red-500"
-                        title="Delete user"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                      {(() => {
+                        const isLastUser = users.length <= 1;
+                        const isLastOwner = (user.role === 'OWNER') && users.filter(u => u.role === 'OWNER').length <= 1;
+                        const canDelete = !isLastUser && !isLastOwner;
+                        return (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => canDelete && openDelete(user)}
+                            disabled={!canDelete}
+                            className={`h-8 w-8 p-0 ${canDelete ? 'hover:bg-red-500/10 text-muted-foreground hover:text-red-500' : 'text-muted-foreground/30 cursor-not-allowed'}`}
+                            title={isLastUser ? 'Tidak bisa hapus user terakhir' : isLastOwner ? 'Tidak bisa hapus Owner terakhir' : 'Delete user'}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        );
+                      })()}
                     </div>
                   </TableCell>
                 </TableRow>
