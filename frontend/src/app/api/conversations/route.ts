@@ -84,3 +84,45 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ message: e.message }, { status: 500 });
   }
 }
+
+// DELETE: Delete one or many conversations (with all messages)
+export async function DELETE(request: NextRequest) {
+  const user = getUser(request);
+  if (!user) return unauthorized();
+
+  try {
+    const { ids } = await request.json();
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json({ message: 'ids (array) wajib diisi' }, { status: 400 });
+    }
+
+    // Verify all conversations belong to this company
+    const conversations = await prisma.conversation.findMany({
+      where: { id: { in: ids }, companyId: user.companyId },
+      select: { id: true }
+    });
+    const validIds = conversations.map(c => c.id);
+
+    if (validIds.length === 0) {
+      return NextResponse.json({ message: 'Tidak ada percakapan yang ditemukan' }, { status: 404 });
+    }
+
+    // Delete messages first (foreign key constraint)
+    await prisma.message.deleteMany({
+      where: { conversationId: { in: validIds } }
+    });
+
+    // Delete conversations
+    const result = await prisma.conversation.deleteMany({
+      where: { id: { in: validIds } }
+    });
+
+    return NextResponse.json({
+      success: true,
+      deleted: result.count,
+      message: `${result.count} percakapan berhasil dihapus`
+    });
+  } catch (e: any) {
+    return NextResponse.json({ message: e.message }, { status: 500 });
+  }
+}

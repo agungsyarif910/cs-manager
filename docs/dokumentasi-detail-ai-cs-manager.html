@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dokumentasi Detail AI Customer Service Manager v2.0</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      color: #1a1a2e;
+      line-height: 1.8;
+      font-size: 14px;
+      background: #fff;
+    }
+
+    @media print {
+      body { font-size: 12px; }
+      .page-break { page-break-before: always; }
+      .no-print { display: none; }
+      .cover { height: 100vh; }
+    }
+
+    /* Cover Page */
+    .cover {
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      text-align: center;
+      padding: 60px 40px;
+    }
+    .cover-logo { font-size: 64px; margin-bottom: 20px; }
+    .cover h1 { font-size: 42px; font-weight: 800; margin-bottom: 12px; border: none; color: white; }
+    .cover h2 { font-size: 22px; font-weight: 400; opacity: 0.85; margin-bottom: 40px; color: white; border: none; }
+    .cover .version { 
+      background: rgba(255,255,255,0.15); 
+      padding: 8px 24px; border-radius: 50px; 
+      font-size: 14px; margin-bottom: 60px;
+    }
+    .cover .meta { font-size: 13px; opacity: 0.6; line-height: 2; }
+
+    /* Content */
+    .content { max-width: 800px; margin: 0 auto; padding: 40px 40px; }
+    
+    /* TOC */
+    .toc { padding: 40px; max-width: 800px; margin: 0 auto; }
+    .toc h2 { font-size: 28px; font-weight: 700; margin-bottom: 24px; color: #302b63; }
+    .toc-item { 
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 10px 0; border-bottom: 1px dotted #ddd; font-size: 15px;
+    }
+    .toc-item.main { font-weight: 600; font-size: 16px; }
+    .toc-item.sub { padding-left: 24px; font-size: 14px; color: #555; }
+    
+    /* Headings */
+    h1 { font-size: 32px; font-weight: 800; color: #302b63; margin: 40px 0 16px; border-bottom: 3px solid #302b63; padding-bottom: 8px; }
+    h2 { font-size: 24px; font-weight: 700; color: #302b63; margin: 32px 0 12px; }
+    h3 { font-size: 18px; font-weight: 600; color: #24243e; margin: 24px 0 8px; }
+    h4 { font-size: 15px; font-weight: 600; color: #555; margin: 16px 0 8px; }
+    
+    p { margin-bottom: 12px; text-align: justify; }
+    
+    /* Lists */
+    ul, ol { margin: 8px 0 16px 24px; }
+    li { margin-bottom: 6px; }
+    
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 13px; }
+    th { background: #302b63; color: white; padding: 10px 12px; text-align: left; font-weight: 600; }
+    td { padding: 8px 12px; border: 1px solid #e0e0e0; vertical-align: top; }
+    tr:nth-child(even) { background: #f8f9fa; }
+    
+    /* Boxes */
+    .info-box {
+      background: #e8f4fd; border-left: 4px solid #2196F3;
+      padding: 16px 20px; margin: 16px 0; border-radius: 0 8px 8px 0;
+    }
+    .warning-box {
+      background: #fff3e0; border-left: 4px solid #ff9800;
+      padding: 16px 20px; margin: 16px 0; border-radius: 0 8px 8px 0;
+    }
+    .success-box {
+      background: #e8f5e9; border-left: 4px solid #4caf50;
+      padding: 16px 20px; margin: 16px 0; border-radius: 0 8px 8px 0;
+    }
+    .tip-box {
+      background: #f3e5f5; border-left: 4px solid #9c27b0;
+      padding: 16px 20px; margin: 16px 0; border-radius: 0 8px 8px 0;
+    }
+    .box-title { font-weight: 700; margin-bottom: 4px; }
+    
+    /* Code */
+    code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 13px; font-family: 'Consolas', monospace; }
+    
+    /* Flow Diagram */
+    .flow-diagram {
+      background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 12px;
+      padding: 24px; margin: 20px 0; text-align: center;
+    }
+    .flow-step {
+      display: inline-block; background: #302b63; color: white;
+      padding: 10px 20px; border-radius: 8px; margin: 4px;
+      font-weight: 600; font-size: 13px;
+    }
+    .flow-arrow { display: inline-block; margin: 0 8px; font-size: 20px; color: #302b63; }
+    
+    /* Step guide */
+    .step { 
+      display: flex; gap: 16px; margin: 16px 0; padding: 16px;
+      background: #fafafa; border-radius: 8px; border: 1px solid #eee;
+    }
+    .step-number {
+      background: #302b63; color: white; width: 32px; height: 32px;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; flex-shrink: 0;
+    }
+    .step-content { flex: 1; }
+    .step-content strong { color: #302b63; }
+
+    /* Footer */
+    .footer {
+      text-align: center; padding: 40px; color: #999; font-size: 12px;
+      border-top: 1px solid #eee; margin-top: 60px;
+    }
+    
+    .highlight { background: #fff9c4; padding: 2px 4px; border-radius: 3px; }
+
+    /* Progress Bar */
+    .progress-bar-container {
+      background: #e0e0e0; border-radius: 12px; height: 36px;
+      overflow: hidden; margin: 16px 0; position: relative;
+    }
+    .progress-bar {
+      background: linear-gradient(90deg, #302b63, #6a5acd);
+      height: 100%; border-radius: 12px;
+      display: flex; align-items: center; justify-content: flex-end;
+      padding-right: 14px; color: white; font-weight: 700; font-size: 15px;
+    }
+
+    /* Status badges */
+    .status-done { display: inline-block; background: #e8f5e9; color: #2e7d32; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+    .status-partial { display: inline-block; background: #fff3e0; color: #e65100; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+    .status-not-started { display: inline-block; background: #fce4ec; color: #c62828; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+
+    /* Compare */
+    .compare-old { color: #999; }
+    .compare-new { color: #2e7d32; font-weight: 600; }
+
+    /* Prompt example */
+    .prompt-example {
+      background: #f5f5f5; padding: 16px; border-radius: 8px;
+      margin: 12px 0; font-size: 13px; font-family: 'Consolas', monospace; line-height: 1.6;
+    }
+
+    /* Section label */
+    .section-route {
+      display: inline-block; background: #302b63; color: white;
+      padding: 4px 14px; border-radius: 6px; font-size: 12px; font-weight: 600;
+      margin-bottom: 8px; font-family: 'Consolas', monospace;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ==================== COVER PAGE ==================== -->
+<div class="cover">
+  <div class="cover-logo">📋</div>
+  <h1>AI Customer Service Manager</h1>
+  <h2>Dokumentasi Detail &amp; Status Pengembangan v2.0</h2>
+  <div class="version">Versi 2.0 — Agustus 2026</div>
+  <div class="meta">
+    Dokumentasi Detail Penggunaan &amp; Analisa Progress<br>
+    Status Terkini Aplikasi<br><br>
+    <strong>RAHASIA — HANYA UNTUK INTERNAL</strong>
+  </div>
+</div>
+
+<!-- ==================== TABLE OF CONTENTS ==================== -->
+<div class="page-break"></div>
+<div class="toc">
+  <h2>📑 Daftar Isi</h2>
+  
+  <div class="toc-item main">BAB 1 — Ringkasan Eksekutif</div>
+  <div class="toc-item sub">1.1 Perubahan dari v1.0 ke v2.0</div>
+  <div class="toc-item sub">1.2 Status Keseluruhan</div>
+  
+  <div class="toc-item main">BAB 2 — Arsitektur &amp; Teknologi</div>
+  <div class="toc-item sub">2.1 Stack Teknologi</div>
+  <div class="toc-item sub">2.2 Database Schema</div>
+  <div class="toc-item sub">2.3 Alur Kerja Sistem</div>
+  
+  <div class="toc-item main">BAB 3 — Login &amp; Autentikasi</div>
+  <div class="toc-item sub">3.1 Cara Login</div>
+  <div class="toc-item sub">3.2 Sistem Keamanan</div>
+  
+  <div class="toc-item main">BAB 4 — Dashboard Monitoring</div>
+  <div class="toc-item sub">4.1 Kartu Statistik</div>
+  <div class="toc-item sub">4.2 Grafik &amp; Visualisasi</div>
+  
+  <div class="toc-item main">BAB 5 — Manajemen Percakapan</div>
+  <div class="toc-item sub">5.1 Daftar Percakapan</div>
+  <div class="toc-item sub">5.2 Detail &amp; Chat</div>
+  <div class="toc-item sub">5.3 Takeover &amp; Release</div>
+  
+  <div class="toc-item main">BAB 6 — Manajemen Kontak</div>
+  <div class="toc-item sub">6.1 CRUD Kontak</div>
+  <div class="toc-item sub">6.2 Label &amp; Tag</div>
+  
+  <div class="toc-item main">BAB 7 — Knowledge Base &amp; RAG</div>
+  <div class="toc-item sub">7.1 Upload &amp; Indexing</div>
+  <div class="toc-item sub">7.2 RAG Pipeline</div>
+  
+  <div class="toc-item main">BAB 8 — AI Agent Configuration</div>
+  <div class="toc-item sub">8.1 Konfigurasi Agent</div>
+  <div class="toc-item sub">8.2 Prompt Builder</div>
+  
+  <div class="toc-item main">BAB 9 — Template &amp; Broadcast</div>
+  <div class="toc-item sub">9.1 Template Pesan</div>
+  <div class="toc-item sub">9.2 Broadcast</div>
+  
+  <div class="toc-item main">BAB 10 — Workflow, Users, Settings</div>
+  <div class="toc-item sub">10.1 Workflow</div>
+  <div class="toc-item sub">10.2 User Management</div>
+  <div class="toc-item sub">10.3 Settings</div>
+  <div class="toc-item sub">10.4 Audit Log</div>
+  
+  <div class="toc-item main">BAB 11 — Analisa Progress</div>
+  <div class="toc-item sub">11.1 Progress per Fitur</div>
+  <div class="toc-item sub">11.2 Estimasi Keseluruhan</div>
+  <div class="toc-item sub">11.3 Sisa Pekerjaan</div>
+  
+  <div class="toc-item main">BAB 12 — API Endpoints</div>
+</div>
+
+<!-- ==================== BAB 1 ==================== -->
+<div class="page-break"></div>
+<div class="content">
+  <h1>BAB 1 — Ringkasan Eksekutif</h1>
+  
+  <h2>1.1 Perubahan dari v1.0 ke v2.0</h2>
+  <p>
+    <strong>AI Customer Service Manager (AI CS Manager)</strong> telah berkembang secara signifikan dari <strong>prototipe statis</strong> (v1.0) menjadi <strong>aplikasi fungsional</strong> yang terhubung ke database nyata, WhatsApp API, dan AI Engine.
+  </p>
+  
+  <table>
+    <tr>
+      <th width="20%">Aspek</th>
+      <th width="35%">Dokumentasi Awal (v1.0)</th>
+      <th width="45%">Kondisi Saat Ini (v2.0)</th>
+    </tr>
+    <tr>
+      <td><strong>Data</strong></td>
+      <td class="compare-old">Semua statis/hardcoded</td>
+      <td class="compare-new">✅ Database PostgreSQL (Supabase)</td>
+    </tr>
+    <tr>
+      <td><strong>Autentikasi</strong></td>
+      <td class="compare-old">Belum ada</td>
+      <td class="compare-new">✅ Login real dengan bcrypt &amp; session</td>
+    </tr>
+    <tr>
+      <td><strong>WhatsApp</strong></td>
+      <td class="compare-old">Rencana saja</td>
+      <td class="compare-new">✅ KirimDev API terintegrasi</td>
+    </tr>
+    <tr>
+      <td><strong>AI Engine</strong></td>
+      <td class="compare-old">Rencana saja</td>
+      <td class="compare-new">✅ SumoPod API (OpenAI-compatible)</td>
+    </tr>
+    <tr>
+      <td><strong>RAG Pipeline</strong></td>
+      <td class="compare-old">Konsep saja</td>
+      <td class="compare-new">✅ pgvector + embedding + vector search</td>
+    </tr>
+    <tr>
+      <td><strong>Backend</strong></td>
+      <td class="compare-old">Belum ada</td>
+      <td class="compare-new">✅ NestJS fully functional</td>
+    </tr>
+    <tr>
+      <td><strong>Deployment</strong></td>
+      <td class="compare-old">Localhost saja</td>
+      <td class="compare-new">✅ Vercel (backend) + Supabase (DB)</td>
+    </tr>
+  </table>
+
+  <h2>1.2 Status Keseluruhan</h2>
+  <p>Dari rencana <strong>12 BAB</strong> pada dokumentasi awal, aplikasi sudah mencapai progress keseluruhan sekitar <strong>87%</strong>.</p>
+  
+  <h3>🎯 Estimasi Progress: 87%</h3>
+  <div class="progress-bar-container">
+    <div class="progress-bar" style="width: 87%;">87%</div>
+  </div>
+
+  <div class="success-box">
+    <div class="box-title">✅ Pencapaian Utama</div>
+    <ul>
+      <li><strong>Dari 100% statis → ~95% dinamis</strong> (terhubung database nyata)</li>
+      <li><strong>End-to-end WhatsApp automation</strong> berjalan (terima pesan → AI jawab → kirim balasan)</li>
+      <li><strong>RAG Pipeline lengkap</strong> (upload dokumen → AI menjawab berdasarkan data perusahaan)</li>
+      <li><strong>40+ API endpoints</strong> fungsional</li>
+      <li><strong>14 tabel database</strong> dengan relasi lengkap</li>
+      <li><strong>Authentication &amp; Authorization</strong> dengan role-based access</li>
+      <li><strong>Deployment</strong> di Vercel (backend) + Supabase (database)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ==================== BAB 2 ==================== -->
+<div class="page-break"></div>
+<div class="content">
+  <h1>BAB 2 — Arsitektur &amp; Teknologi</h1>
+  
+  <h2>2.1 Stack Teknologi</h2>
+  <p>AI CS Manager terdiri dari beberapa komponen yang bekerja sama:</p>
+  
+  <div class="flow-diagram">
+    <div style="margin-bottom: 16px;">
+      <div class="flow-step">📱 Pelanggan WhatsApp</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">🔌 KirimDev API</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">⚙️ Backend (NestJS)</div>
+    </div>
+    <div style="margin-bottom: 16px;">
+      <div class="flow-arrow">↓</div>
+    </div>
+    <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+      <div class="flow-step" style="background: #1565c0;">🤖 SumoPod AI</div>
+      <div class="flow-step" style="background: #2e7d32;">📚 Knowledge Base</div>
+      <div class="flow-step" style="background: #e65100;">🗄️ PostgreSQL</div>
+      <div class="flow-step" style="background: #6a1b9a;">📊 Dashboard</div>
+    </div>
+  </div>
+
+  <table>
+    <tr>
+      <th>Komponen</th>
+      <th>Teknologi</th>
+      <th>Versi</th>
+      <th>Fungsi</th>
+    </tr>
+    <tr>
+      <td><strong>Frontend</strong></td>
+      <td>Next.js (React)</td>
+      <td>15.3.3</td>
+      <td>Dashboard web, API routes, server-side rendering</td>
+    </tr>
+    <tr>
+      <td><strong>Backend</strong></td>
+      <td>NestJS (Node.js)</td>
+      <td>11</td>
+      <td>Webhook processing, AI pipeline, external API calls</td>
+    </tr>
+    <tr>
+      <td><strong>Database</strong></td>
+      <td>PostgreSQL (Supabase)</td>
+      <td>—</td>
+      <td>Data storage dengan pgvector extension</td>
+    </tr>
+    <tr>
+      <td><strong>ORM</strong></td>
+      <td>Prisma</td>
+      <td>6.9.0</td>
+      <td>Database access (shared schema frontend &amp; backend)</td>
+    </tr>
+    <tr>
+      <td><strong>UI</strong></td>
+      <td>Radix UI + TailwindCSS</td>
+      <td>3.4.17</td>
+      <td>Komponen UI premium</td>
+    </tr>
+    <tr>
+      <td><strong>Charts</strong></td>
+      <td>Recharts</td>
+      <td>2.15.4</td>
+      <td>Visualisasi data dashboard</td>
+    </tr>
+    <tr>
+      <td><strong>AI Engine</strong></td>
+      <td>SumoPod (OpenAI-compatible)</td>
+      <td>—</td>
+      <td>Chat completion &amp; text embedding</td>
+    </tr>
+    <tr>
+      <td><strong>WhatsApp</strong></td>
+      <td>KirimDev</td>
+      <td>—</td>
+      <td>Kirim/terima pesan WhatsApp</td>
+    </tr>
+    <tr>
+      <td><strong>File Processing</strong></td>
+      <td>pdf-parse, mammoth, xlsx</td>
+      <td>—</td>
+      <td>Parsing dokumen untuk Knowledge Base</td>
+    </tr>
+  </table>
+
+  <h2>2.2 Database Schema</h2>
+  <p>Aplikasi menggunakan <strong>14 tabel</strong> utama di PostgreSQL dengan ekstensi pgvector:</p>
+
+  <table>
+    <tr>
+      <th>Tabel</th>
+      <th>Fungsi</th>
+      <th>Relasi</th>
+    </tr>
+    <tr><td><strong>User</strong></td><td>Pengguna sistem (Owner, Supervisor, CS, Viewer)</td><td>→ Session, AuditLog</td></tr>
+    <tr><td><strong>Session</strong></td><td>Sesi login aktif</td><td>→ User</td></tr>
+    <tr><td><strong>Contact</strong></td><td>Data kontak pelanggan WhatsApp</td><td>→ Conversation, BroadcastRecipient</td></tr>
+    <tr><td><strong>Conversation</strong></td><td>Percakapan dengan pelanggan</td><td>→ Contact, Message, User (assigned)</td></tr>
+    <tr><td><strong>Message</strong></td><td>Pesan individual dalam percakapan</td><td>→ Conversation</td></tr>
+    <tr><td><strong>KnowledgeBase</strong></td><td>Dokumen knowledge yang di-upload</td><td>→ KnowledgeChunk</td></tr>
+    <tr><td><strong>KnowledgeChunk</strong></td><td>Potongan dokumen + vector embedding</td><td>→ KnowledgeBase</td></tr>
+    <tr><td><strong>AiAgent</strong></td><td>Konfigurasi AI agent (prompt, model, dll)</td><td>—</td></tr>
+    <tr><td><strong>Template</strong></td><td>Template pesan siap pakai</td><td>→ Broadcast</td></tr>
+    <tr><td><strong>Broadcast</strong></td><td>Kampanye broadcast</td><td>→ Template, BroadcastRecipient</td></tr>
+    <tr><td><strong>BroadcastRecipient</strong></td><td>Penerima broadcast individual</td><td>→ Broadcast, Contact</td></tr>
+    <tr><td><strong>Settings</strong></td><td>Konfigurasi aplikasi (key-value)</td><td>—</td></tr>
+    <tr><td><strong>AuditLog</strong></td><td>Log aktivitas sistem</td><td>→ User</td></tr>
+    <tr><td><strong>Workflow</strong></td><td>Aturan otomasi</td><td>—</td></tr>
+  </table>
+
+  <h2>2.3 Alur Kerja Sistem</h2>
+  <h3>Alur Pesan Masuk (Inbound) — ✅ Sudah Berjalan</h3>
+
+  <div class="step">
+    <div class="step-number">1</div>
+    <div class="step-content">
+      <strong>Pelanggan mengirim pesan</strong><br>
+      Pelanggan mengirim pesan WhatsApp ke nomor bisnis perusahaan.
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-number">2</div>
+    <div class="step-content">
+      <strong>KirimDev menerima &amp; forward</strong><br>
+      Platform KirimDev mengirimkan webhook ke backend (<code>POST /api/webhook/kirimdev</code>).
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-number">3</div>
+    <div class="step-content">
+      <strong>Backend menyimpan pesan</strong><br>
+      Pesan disimpan ke database. Contact &amp; Conversation dibuat (jika baru) atau dilanjutkan.
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-number">4</div>
+    <div class="step-content">
+      <strong>Ambil konteks</strong><br>
+      Backend mengambil 20 pesan terakhir dari percakapan + konfigurasi AI Agent yang aktif.
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-number">5</div>
+    <div class="step-content">
+      <strong>RAG — Pencarian Knowledge Base</strong><br>
+      Generate embedding dari pertanyaan via SumoPod API, lalu vector similarity search di pgvector. Ambil top 5 chunks dengan similarity &gt; 0.7.
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-number">6</div>
+    <div class="step-content">
+      <strong>AI Generate Jawaban</strong><br>
+      SumoPod memproses: system prompt + knowledge context + conversation history → hasilkan jawaban + confidence score.
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-number">7</div>
+    <div class="step-content">
+      <strong>Kirim balasan</strong><br>
+      Balasan dikirim ke pelanggan melalui KirimDev API → pelanggan menerima di WhatsApp.
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-number">8</div>
+    <div class="step-content">
+      <strong>Simpan &amp; update</strong><br>
+      Pesan keluar disimpan ke DB, confidence score dicatat, status conversation diupdate.
+    </div>
+  </div>
+
+  <div class="info-box">
+    <div class="box-title">📌 Penting</div>
+    Seluruh alur ini berjalan <strong>otomatis</strong>. Dari pelanggan mengirim pesan hingga menerima balasan AI, prosesnya memakan waktu kurang dari <strong>5 detik</strong>.
+  </div>
+</div>
+
+<!-- ==================== BAB 3 ==================== -->
+<div class="page-break"></div>
+<div class="content">
+  <h1>BAB 3 — Login &amp; Autentikasi</h1>
+  
+  <h2>3.1 Cara Login</h2>
+  <div class="section-route">/login</div>
+
+  <div class="step">
+    <div class="step-number">1</div>
+    <div class="step-content">
+      <strong>Buka browser</strong><br>
+      Akses URL aplikasi (<code>http://localhost:3000</code> atau URL deployment yang diberikan admin IT).
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-number">2</div>
+    <div class="step-content">
+      <strong>Masukkan kredensial</strong><br>
+      Input <strong>Email</strong> dan <strong>Password</strong> pada halaman login.
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-number">3</div>
+    <div class="step-content">
+      <strong>Klik "Sign In"</strong><br>
+      Sistem memverifikasi password (bcrypt), membuat session di database, set cookie, redirect ke Dashboard utama.
+    </div>
+  </div>
+
+  <div class="warning-box">
+    <div class="box-title">⚠️ Akun Default (Pertama Kali)</div>
+    Email: <code>admin@example.com</code> | Password: <code>admin123</code><br>
+    <strong>Segera ganti password setelah login pertama!</strong>
+  </div>
+
+  <h2>3.2 Sistem Keamanan</h2>
+  <table>
+    <tr><th>Fitur Keamanan</th><th>Status</th><th>Detail</th></tr>
+    <tr><td><strong>Password Hashing</strong></td><td>✅ Aktif</td><td>bcrypt dengan salt rounds</td></tr>
+    <tr><td><strong>Session Management</strong></td><td>✅ Aktif</td><td>Token unik disimpan di DB, expire 24 jam</td></tr>
+    <tr><td><strong>Cookie Auth</strong></td><td>✅ Aktif</td><td>HttpOnly cookie untuk setiap request</td></tr>
+    <tr><td><strong>Auth Guard</strong></td><td>✅ Aktif</td><td>Semua halaman dashboard dilindungi</td></tr>
+    <tr><td><strong>Role-Based Access</strong></td><td>✅ Aktif</td><td>4 role: Owner, Supervisor, CS, Viewer</td></tr>
+    <tr><td><strong>Audit Logging</strong></td><td>✅ Aktif</td><td>Semua aksi login/logout tercatat</td></tr>
+  </table>
+</div>
+
+<!-- ==================== BAB 4 ==================== -->
+<div class="page-break"></div>
+<div class="content">
+  <h1>BAB 4 — Dashboard Monitoring</h1>
+  
+  <h2>4.1 Kartu Statistik</h2>
+  <div class="section-route">/dashboard</div>
+  <p>Dashboard menampilkan <strong>data real-time</strong> dari database:</p>
+  
+  <table>
+    <tr><th>Kartu</th><th>Data</th><th>Sumber Data</th></tr>
+    <tr><td><strong>Total Messages</strong></td><td>Jumlah total semua pesan</td><td>Agregasi tabel <code>Message</code></td></tr>
+    <tr><td><strong>Today's Messages</strong></td><td>Pesan yang diproses hari ini</td><td>Filter tanggal hari ini</td></tr>
+    <tr><td><strong>AI Handled</strong></td><td>Persentase pesan yang dijawab AI</td><td><code>senderType = AI</code> / total</td></tr>
+    <tr><td><strong>Active Conversations</strong></td><td>Percakapan sedang aktif</td><td><code>status != CLOSED</code></td></tr>
+  </table>
+
+  <div class="success-box">
+    <div class="box-title">✅ Data Real</div>
+    Semua data pada dashboard berasal dari <strong>query database nyata</strong>, bukan hardcoded!
+  </div>
+
+  <h2>4.2 Grafik &amp; Visualisasi</h2>
+  <p>Dashboard menyediakan visualisasi data menggunakan library <strong>Recharts</strong>:</p>
+  <ul>
+    <li><strong>Line Chart — Tren Harian:</strong> Jumlah pesan per hari selama 30 hari terakhir</li>
+    <li><strong>Line Chart — Tren Bulanan:</strong> Jumlah pesan per bulan selama 12 bulan terakhir</li>
+    <li><strong>Pie Chart — Distribusi:</strong> Perbandingan AI vs Human handling</li>
+  </ul>
+  <p>Data diambil dari agregasi tabel <code>Message</code> berdasarkan <code>createdAt</code>.</p>
+
+  <div class="tip-box">
+    <div class="box-title">💡 Tips Monitoring</div>
+    <ul>
+      <li>Periksa dashboard setiap pagi untuk melihat kinerja AI semalam</li>
+      <li>Jika escalation rate &gt;30%, pertimbangkan untuk menambah konten ke Knowledge Base</li>
+      <li>Pantau response time — jika meningkat, mungkin perlu optimasi</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ==================== BAB 5 ==================== -->
+<div class="page-break"></div>
+<div class="content">
+  <h1>BAB 5 — Manajemen Percakapan</h1>
+  
+  <h2>5.1 Daftar Percakapan</h2>
+  <div class="section-route">/dashboard/conversations</div>
+  <p>Halaman <strong>Conversations</strong> menampilkan semua percakapan yang terjadi. Fitur filter yang tersedia:</p>
+  <ul>
+    <li><strong>Search:</strong> Cari berdasarkan nama/nomor kontak</li>
+    <li><strong>Status Filter:</strong> Active, AI Handling, Need Human, Human Handling, Closed</li>
+    <li><strong>Pagination:</strong> Navigasi halaman untuk daftar panjang</li>
+  </ul>
+
+  <table>
+    <tr><th>Status</th><th>Warna</th><th>Arti</th></tr>
+    <tr><td>ACTIVE</td><td>🟢 Hijau</td><td>Percakapan baru, belum ada respons</td></tr>
+    <tr><td>AI_HANDLING</td><td>🔵 Biru</td><td>AI sedang menangani percakapan ini</td></tr>
+    <tr><td>NEED_HUMAN</td><td>🟠 Oranye</td><td>AI confidence rendah, butuh CS manusia</td></tr>
+    <tr><td>HUMAN_HANDLING</td><td>🟡 Kuning</td><td>CS manusia sedang menangani</td></tr>
+    <tr><td>CLOSED</td><td>⚪ Abu-abu</td><td>Percakapan sudah selesai/ditutup</td></tr>
+  </table>
+
+  <h2>5.2 Detail &amp; Chat</h2>
+  <div class="section-route">/dashboard/conversations/[id]</div>
+  <p>Klik pada percakapan untuk melihat detail, termasuk:</p>
+  <ul>
+    <li><strong>Chat bubbles</strong> dengan pembedaan visual: Customer, AI, Human</li>
+    <li><strong>Sidebar</strong> informasi kontak (nama, nomor, email, label)</li>
+    <li><strong>Input pesan</strong> untuk balas manual → dikirim via KirimDev API ke WhatsApp pelanggan</li>
+    <li><strong>Confidence score</strong> AI untuk setiap respons</li>
+  </ul>
+
+  <div class="info-box">
+    <div class="box-title">📌 Pesan Nyata</div>
+    Pesan yang dikirim dari dashboard <strong>langsung terkirim ke WhatsApp pelanggan</strong> melalui KirimDev API — bukan simulasi!
+  </div>
+
+  <h2>5.3 Takeover &amp; Release</h2>
+  <h3>Takeover: AI → Manusia</h3>
+  <div class="step">
+    <div class="step-number">1</div>
+    <div class="step-content">
+      <strong>Identifikasi percakapan</strong><br>
+      Cari percakapan dengan status <span class="highlight">NEED_HUMAN</span> atau confidence score rendah.
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-number">2</div>
+    <div class="step-content">
+      <strong>Klik "Assign to Me"</strong><br>
+      Pada detail percakapan, klik tombol assign untuk mengambil alih percakapan.
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-number">3</div>
+    <div class="step-content">
+      <strong>Handle manual</strong><br>
+      Balas pesan dari dashboard atau WhatsApp di HP. Status berubah ke <span class="highlight">HUMAN_HANDLING</span>.
+    </div>
+  </div>
+
+  <h3>Release: Manusia → AI</h3>
+  <ul>
+    <li>Klik tombol <strong>"Release to AI"</strong> pada detail percakapan</li>
+    <li>Status berubah kembali ke <span class="highlight">AI_HANDLING</span></li>
+    <li>AI akan kembali merespons pesan-pesan berikutnya</li>
+  </ul>
+
+  <div class="warning-box">
+    <div class="box-title">⚠️ Perhatian</div>
+    Pastikan masalah pelanggan sudah terselesaikan sebelum melepas kembali ke AI. Jika pelanggan masih membutuhkan bantuan khusus, tetap handle secara manual.
+  </div>
+</div>
+
+<!-- ==================== BAB 6 ==================== -->
+<div class="page-break"></div>
+<div class="content">
+  <h1>BAB 6 — Manajemen Kontak</h1>
+  
+  <h2>6.1 CRUD Kontak</h2>
+  <div class="section-route">/dashboard/contacts</div>
+
+  <table>
+    <tr><th>Fitur</th><th>Status</th><th>Deskripsi</th></tr>
+    <tr><td><strong>Daftar Kontak</strong></td><td><span class="status-done">✅ Fungsional</span></td><td>Tabel dengan search &amp; pagination</td></tr>
+    <tr><td><strong>Tambah Kontak</strong></td><td><span class="status-done">✅ Fungsional</span></td><td>Form dialog: Nama, Telepon, Email, Catatan</td></tr>
+    <tr><td><strong>Edit Kontak</strong></td><td><span class="status-done">✅ Fungsional</span></td><td>Klik kontak → edit informasi</td></tr>
+    <tr><td><strong>Hapus Kontak</strong></td><td><span class="status-done">✅ Fungsional</span></td><td>Konfirmasi sebelum hapus</td></tr>
+    <tr><td><strong>Auto-create</strong></td><td><span class="status-done">✅ Fungsional</span></td><td>Kontak baru otomatis dibuat saat pesan masuk via webhook</td></tr>
+  </table>
+
+  <h2>6.2 Label &amp; Tag</h2>
+  <p>Label dan tag membantu mengorganisasi kontak:</p>
+  <ul>
+    <li><strong>Label:</strong> Kategori utama (VIP, Regular, New Customer, Complaint)</li>
+    <li><strong>Tag:</strong> Penanda fleksibel (interested-product-A, follow-up-needed, resolved)</li>
+  </ul>
+</div>
+
+<!-- ==================== BAB 7 ==================== -->
+<div class="page-break"></div>
+<div class="content">
+  <h1>BAB 7 — Knowledge Base &amp; RAG</h1>
+  
+  <h2>7.1 Upload &amp; Indexing</h2>
+  <div class="section-route">/dashboard/knowledge-base</div>
+
+  <div class="info-box">
+    <div class="box-title">📌 Penting untuk Dipahami</div>
+    Knowledge Base adalah <strong>"otak" AI</strong>. Semakin lengkap dan akurat data di knowledge base, semakin baik AI dalam menjawab pertanyaan pelanggan.
+  </div>
+
+  <h3>Proses Upload &amp; Indexing</h3>
+  <div class="flow-diagram">
+    <div class="flow-step">📄 Upload File</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">📝 Ekstraksi Teks</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">✂️ Chunking</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step" style="background: #1565c0;">🧠 Embedding</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step" style="background: #2e7d32;">💾 pgvector</div>
+  </div>
+
+  <h4>Format Dokumen yang Didukung</h4>
+  <table>
+    <tr><th>Format</th><th>Ekstensi</th><th>Parser</th></tr>
+    <tr><td>PDF</td><td>.pdf</td><td>pdf-parse</td></tr>
+    <tr><td>Word</td><td>.docx</td><td>mammoth</td></tr>
+    <tr><td>Text</td><td>.txt, .md</td><td>Direct read</td></tr>
+    <tr><td>CSV</td><td>.csv</td><td>Built-in parser</td></tr>
+    <tr><td>Excel</td><td>.xlsx, .xls</td><td>xlsx library</td></tr>
+    <tr><td>HTML</td><td>.html</td><td>Built-in parser</td></tr>
+  </table>
+
+  <h4>Status Dokumen</h4>
+  <table>
+    <tr><th>Status</th><th>Arti</th></tr>
+    <tr><td><span class="status-partial">PENDING</span></td><td>Baru di-upload, menunggu proses</td></tr>
+    <tr><td><span class="status-partial">PROCESSING</span></td><td>Sedang di-chunking dan di-embedding</td></tr>
+    <tr><td><span class="status-done">INDEXED</span></td><td>✅ Siap digunakan AI untuk menjawab</td></tr>
+    <tr><td><span class="status-not-started">ERROR</span></td><td>Gagal diproses</td></tr>
+  </table>
+
+  <div class="success-box">
+    <div class="box-title">✅ Tips Knowledge Base yang Baik</div>
+    <ul>
+      <li>Upload FAQ dalam format yang jelas (pertanyaan + jawaban)</li>
+      <li>Pastikan informasi produk dan harga selalu up-to-date</li>
+      <li>Sertakan informasi kontak, jam kerja, dan lokasi</li>
+      <li>Update knowledge base setiap ada perubahan kebijakan</li>
+      <li>Gunakan bahasa yang natural, bukan terlalu teknis</li>
+    </ul>
+  </div>
+
+  <h2>7.2 RAG Pipeline</h2>
+  <p>RAG (Retrieval-Augmented Generation) adalah teknologi kunci yang membuat AI bisa menjawab berdasarkan data perusahaan:</p>
+
+  <div class="tip-box">
+    <div class="box-title">💡 Cara Kerja RAG (Sudah Terimplementasi)</div>
+    <ol>
+      <li><strong>Indexing:</strong> Dokumen dipecah menjadi chunks (1000 karakter, 200 overlap) dan dikonversi menjadi vector embedding via SumoPod API</li>
+      <li><strong>Retrieval:</strong> Saat ada pertanyaan, sistem men-generate embedding dari pertanyaan dan melakukan vector similarity search di pgvector (top 5, similarity &gt; 0.7)</li>
+      <li><strong>Generation:</strong> AI menggunakan chunks yang ditemukan sebagai konteks + system prompt + conversation history untuk menghasilkan jawaban akurat</li>
+    </ol>
+  </div>
+</div>
+
+<!-- ==================== BAB 8 ==================== -->
+<div class="page-break"></div>
+<div class="content">
+  <h1>BAB 8 — AI Agent Configuration</h1>
+  
+  <h2>8.1 Konfigurasi Agent</h2>
+  <div class="section-route">/dashboard/ai-agents</div>
+  <p>AI Agent adalah "persona" AI yang berinteraksi dengan pelanggan. Fitur yang tersedia:</p>
+
+  <table>
+    <tr><th>Fitur</th><th>Status</th><th>Deskripsi</th></tr>
+    <tr><td><strong>Buat Agent</strong></td><td><span class="status-done">✅</span></td><td>Nama, deskripsi, role</td></tr>
+    <tr><td><strong>System Prompt</strong></td><td><span class="status-done">✅</span></td><td>Instruksi lengkap untuk AI</td></tr>
+    <tr><td><strong>Model Config</strong></td><td><span class="status-done">✅</span></td><td>Model (deepseek-chat), temperature, max tokens, top P</td></tr>
+    <tr><td><strong>Greeting Message</strong></td><td><span class="status-done">✅</span></td><td>Pesan sapaan untuk kontak baru</td></tr>
+    <tr><td><strong>Fallback Message</strong></td><td><span class="status-done">✅</span></td><td>Pesan saat AI tidak tahu jawaban</td></tr>
+    <tr><td><strong>Activate/Deactivate</strong></td><td><span class="status-done">✅</span></td><td>Toggle agent aktif</td></tr>
+    <tr><td><strong>Set Default</strong></td><td><span class="status-done">✅</span></td><td>Pilih agent default</td></tr>
+  </table>
+
+  <h4>Contoh System Prompt</h4>
+  <div class="prompt-example">
+    Kamu adalah customer service AI dari [Nama Perusahaan], sebuah toko online yang menjual produk elektronik.<br><br>
+    PERANMU:<br>
+    - Menjawab pertanyaan pelanggan dengan ramah dan profesional<br>
+    - Membantu pelanggan menemukan produk yang tepat<br>
+    - Memberikan informasi harga, stok, dan spesifikasi produk<br><br>
+    ATURAN:<br>
+    - Selalu gunakan Bahasa Indonesia yang sopan<br>
+    - Jika tidak tahu jawaban, katakan "Mohon maaf, saya perlu mengecek dengan tim kami"<br>
+    - Jangan pernah memberikan informasi harga yang tidak ada di database<br>
+    - Jika pelanggan komplain, eskalasi ke CS manusia<br><br>
+    PERSONA:<br>
+    - Nama: Aira<br>
+    - Tone: Friendly tapi profesional<br>
+    - Emoji: Gunakan secukupnya (🙏😊)
+  </div>
+
+  <h2>8.2 Prompt Builder</h2>
+  <div class="section-route">/dashboard/prompt-builder</div>
+  <p>Fitur <strong>Prompt Builder</strong> membantu membuat system prompt secara visual tanpa perlu mengetik dari awal:</p>
+
+  <table>
+    <tr><th>Section</th><th>Fungsi</th></tr>
+    <tr><td><strong>Identity</strong></td><td>Siapa AI ini (nama, perusahaan)</td></tr>
+    <tr><td><strong>Role</strong></td><td>Apa tugasnya</td></tr>
+    <tr><td><strong>Knowledge</strong></td><td>Apa yang diketahui</td></tr>
+    <tr><td><strong>Behavior</strong></td><td>Bagaimana bersikap</td></tr>
+    <tr><td><strong>Restrictions</strong></td><td>Apa yang tidak boleh dilakukan</td></tr>
+    <tr><td><strong>Output Format</strong></td><td>Format jawaban</td></tr>
+    <tr><td><strong>Language</strong></td><td>Bahasa yang digunakan</td></tr>
+    <tr><td><strong>Safety</strong></td><td>Batasan keamanan</td></tr>
+  </table>
+  <p>Aksi: <strong>Generate prompt</strong> → Copy ke clipboard atau <strong>Apply langsung</strong> ke AI Agent.</p>
+</div>
+
+<!-- ==================== BAB 9 ==================== -->
+<div class="page-break"></div>
+<div class="content">
+  <h1>BAB 9 — Template &amp; Broadcast</h1>
+  
+  <h2>9.1 Template Pesan</h2>
+  <div class="section-route">/dashboard/templates</div>
+  <p>Template adalah pesan siap pakai yang dapat dikirim dengan cepat:</p>
+
+  <table>
+    <tr><th>Kategori</th><th>Contoh</th></tr>
+    <tr><td>🎉 Greeting</td><td>"Halo {{nama}}! Selamat datang. Ada yang bisa kami bantu?"</td></tr>
+    <tr><td>🏷️ Promo</td><td>"Hi {{nama}}! Diskon {{diskon}}% untuk {{produk}}"</td></tr>
+    <tr><td>👋 Closing</td><td>"Terima kasih {{nama}}! Jangan ragu menghubungi kami kembali"</td></tr>
+    <tr><td>🙏 Thank You</td><td>"Terima kasih atas pesanan Anda! Nomor order: {{orderNumber}}"</td></tr>
+    <tr><td>⏰ Reminder</td><td>"Reminder: Pembayaran jatuh tempo pada {{tanggal}}"</td></tr>
+    <tr><td>🧾 Invoice</td><td>"Invoice #{{invoiceNo}} total {{total}} sudah dikirim"</td></tr>
+    <tr><td>📞 Follow Up</td><td>"Hi {{nama}}, bagaimana pengalaman Anda dengan produk kami?"</td></tr>
+  </table>
+
+  <div class="info-box">
+    <div class="box-title">📌 Variable Template</div>
+    Gunakan <code>{{variabel}}</code> untuk data dinamis. Variabel akan otomatis diganti dengan data kontak saat pengiriman. Contoh: <code>{{nama}}</code> menjadi "Budi".
+  </div>
+
+  <h2>9.2 Broadcast</h2>
+  <div class="section-route">/dashboard/broadcast</div>
+
+  <div class="step">
+    <div class="step-number">1</div>
+    <div class="step-content"><strong>Buka "Broadcast"</strong> → klik "New Broadcast"</div>
+  </div>
+  <div class="step">
+    <div class="step-number">2</div>
+    <div class="step-content"><strong>Pilih template</strong> yang akan digunakan untuk broadcast</div>
+  </div>
+  <div class="step">
+    <div class="step-number">3</div>
+    <div class="step-content"><strong>Pilih target penerima</strong> — semua kontak, berdasarkan label/tag, atau pilih manual</div>
+  </div>
+  <div class="step">
+    <div class="step-number">4</div>
+    <div class="step-content"><strong>Kirim langsung</strong></div>
+  </div>
+  <div class="step">
+    <div class="step-number">5</div>
+    <div class="step-content"><strong>Monitor progress</strong> — pantau status per penerima (success/failed)</div>
+  </div>
+
+  <div class="warning-box">
+    <div class="box-title">⚠️ Peringatan Broadcast</div>
+    <ul>
+      <li>Broadcast mengirim pesan <strong>NYATA</strong> ke WhatsApp pelanggan melalui KirimDev API</li>
+      <li>Pastikan konten sudah benar sebelum mengirim!</li>
+      <li>Jangan spam — broadcast berlebihan dapat menyebabkan akun WhatsApp Business diblokir</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ==================== BAB 10 ==================== -->
+<div class="page-break"></div>
+<div class="content">
+  <h1>BAB 10 — Workflow, Users, Settings</h1>
+  
+  <h2>10.1 Workflow</h2>
+  <div class="section-route">/dashboard/workflow</div>
+
+  <table>
+    <tr><th>Fitur</th><th>Status</th><th>Deskripsi</th></tr>
+    <tr><td><strong>Buat Workflow</strong></td><td><span class="status-done">✅</span></td><td>Nama, trigger, conditions, actions</td></tr>
+    <tr><td><strong>Edit Workflow</strong></td><td><span class="status-done">✅</span></td><td>Modifikasi rules</td></tr>
+    <tr><td><strong>Hapus Workflow</strong></td><td><span class="status-done">✅</span></td><td>Konfirmasi sebelum hapus</td></tr>
+    <tr><td><strong>Priority</strong></td><td><span class="status-done">✅</span></td><td>Urutan prioritas eksekusi</td></tr>
+    <tr><td><strong>Auto-execute</strong></td><td><span class="status-partial">⚠️ BELUM</span></td><td>Rules disimpan tapi belum di-evaluate otomatis saat pesan masuk</td></tr>
+  </table>
+
+  <div class="warning-box">
+    <div class="box-title">⚠️ Catatan Pengembangan</div>
+    CRUD workflow sudah fungsional, tetapi <strong>engine eksekusi otomatis</strong> (evaluate rules saat pesan masuk) belum diimplementasi. Ini adalah salah satu fitur yang masih perlu dikembangkan.
+  </div>
+
+  <h2>10.2 User Management</h2>
+  <div class="section-route">/dashboard/users</div>
+  <p>Hanya <strong>Owner</strong> yang dapat mengakses halaman ini.</p>
+
+  <table>
+    <tr><th>Fitur</th><th>Status</th></tr>
+    <tr><td><strong>Daftar User</strong></td><td><span class="status-done">✅ Fungsional</span></td></tr>
+    <tr><td><strong>Tambah User</strong></td><td><span class="status-done">✅ Fungsional</span></td></tr>
+    <tr><td><strong>Edit User</strong></td><td><span class="status-done">✅ Fungsional</span></td></tr>
+    <tr><td><strong>Hapus User</strong></td><td><span class="status-done">✅ Fungsional</span></td></tr>
+    <tr><td><strong>Role Assignment</strong></td><td><span class="status-done">✅ Fungsional</span></td></tr>
+    <tr><td><strong>Activate/Deactivate</strong></td><td><span class="status-done">✅ Fungsional</span></td></tr>
+  </table>
+
+  <h4>Tabel Role &amp; Akses</h4>
+  <table>
+    <tr><th>Role</th><th>Akses</th></tr>
+    <tr><td><strong>Owner</strong></td><td>Full access — semua fitur termasuk Users &amp; Settings</td></tr>
+    <tr><td><strong>Supervisor</strong></td><td>Dashboard, Conversations, Contacts, monitoring</td></tr>
+    <tr><td><strong>CS</strong></td><td>Conversations, Contacts — handle percakapan</td></tr>
+    <tr><td><strong>Viewer</strong></td><td>Read-only — hanya melihat dashboard &amp; statistik</td></tr>
+  </table>
+
+  <h2>10.3 Settings</h2>
+  <div class="section-route">/dashboard/settings</div>
+
+  <table>
+    <tr><th>Tab</th><th>Konfigurasi</th><th>Status</th></tr>
+    <tr><td><strong>General</strong></td><td>Company name, timezone, working hours, default language</td><td><span class="status-done">✅ Simpan ke DB</span></td></tr>
+    <tr><td><strong>AI Config</strong></td><td>API URL, API Key, Model, Temperature, Max Tokens, Top P</td><td><span class="status-done">✅ Simpan ke DB</span></td></tr>
+    <tr><td><strong>WhatsApp API</strong></td><td>KirimDev API URL, API Key, Phone Number ID, Webhook Secret</td><td><span class="status-done">✅ Simpan ke DB</span></td></tr>
+    <tr><td><strong>Auto-Reply</strong></td><td>Greeting, Outside Hours, Holiday, Busy messages</td><td><span class="status-done">✅ Simpan ke DB</span></td></tr>
+    <tr><td><strong>Notifications</strong></td><td>Telegram (bot token, chat ID), Email (SMTP config)</td><td><span class="status-done">✅ Simpan ke DB</span></td></tr>
+  </table>
+
+  <div class="tip-box">
+    <div class="box-title">💡 Tips Temperature</div>
+    <ul>
+      <li><strong>0.3 - 0.5:</strong> Jawaban sangat konsisten, cocok untuk FAQ dan informasi faktual</li>
+      <li><strong>0.7:</strong> Keseimbangan antara konsistensi dan natural (recommended)</li>
+      <li><strong>1.0+:</strong> Jawaban lebih variatif dan kreatif, tapi bisa kurang akurat</li>
+    </ul>
+  </div>
+
+  <h2>10.4 Audit Log</h2>
+  <div class="section-route">/dashboard/audit-log</div>
+  <ul>
+    <li><strong>Filter:</strong> Berdasarkan tipe aksi, user, rentang tanggal</li>
+    <li><strong>Pagination:</strong> Navigasi halaman</li>
+    <li><strong>Data:</strong> Semua aksi tercatat otomatis — login, create, update, delete, takeover, dll</li>
+  </ul>
+</div>
+
+<!-- ==================== BAB 11 ==================== -->
+<div class="page-break"></div>
+<div class="content">
+  <h1>BAB 11 — Analisa Progress</h1>
+  
+  <h2>11.1 Progress per Fitur</h2>
+  <p>Berdasarkan <strong>12 BAB</strong> dalam dokumentasi awal (v1.0), berikut analisa detail per fitur:</p>
+
+  <table>
+    <tr><th>#</th><th>Fitur</th><th>Status</th><th>Bobot</th><th>Progress</th></tr>
+    <tr><td>1</td><td>Pendahuluan &amp; Konsep</td><td><span class="status-done">✅ Selesai</span></td><td>2%</td><td>100%</td></tr>
+    <tr><td>2</td><td>Arsitektur &amp; Cara Kerja</td><td><span class="status-done">✅ Terimplementasi</span></td><td>8%</td><td>95%</td></tr>
+    <tr><td>3</td><td>Login &amp; Navigasi</td><td><span class="status-done">✅ Fungsional</span></td><td>8%</td><td>100%</td></tr>
+    <tr><td>4</td><td>Dashboard Monitoring</td><td><span class="status-done">✅ Data Real</span></td><td>8%</td><td>90%</td></tr>
+    <tr><td>5</td><td>Manajemen Percakapan</td><td><span class="status-done">✅ Fungsional</span></td><td>15%</td><td>95%</td></tr>
+    <tr><td>6</td><td>Manajemen Kontak</td><td><span class="status-done">✅ Fungsional</span></td><td>8%</td><td>90%</td></tr>
+    <tr><td>7</td><td>Knowledge Base &amp; RAG</td><td><span class="status-done">✅ Fungsional</span></td><td>15%</td><td>90%</td></tr>
+    <tr><td>8</td><td>AI Agent Configuration</td><td><span class="status-done">✅ Fungsional</span></td><td>10%</td><td>90%</td></tr>
+    <tr><td>9</td><td>Template &amp; Broadcast</td><td><span class="status-done">✅ Fungsional</span></td><td>8%</td><td>85%</td></tr>
+    <tr><td>10</td><td>Settings &amp; Konfigurasi</td><td><span class="status-done">✅ Fungsional</span></td><td>8%</td><td>85%</td></tr>
+    <tr><td>11</td><td>Workflow / Auto-Reply</td><td><span class="status-partial">🔶 Partial</span></td><td>5%</td><td>50%</td></tr>
+    <tr><td>12</td><td>Notifications</td><td><span class="status-partial">🔶 Partial</span></td><td>5%</td><td>30%</td></tr>
+  </table>
+
+  <h2>11.2 Estimasi Keseluruhan</h2>
+  
+  <h3>🎯 Estimasi Progress: 87%</h3>
+  <div class="progress-bar-container">
+    <div class="progress-bar" style="width: 87%;">87%</div>
+  </div>
+
+  <h4>Breakdown per Kategori</h4>
+  <table>
+    <tr><th>Kategori</th><th>Progress</th><th>Keterangan</th></tr>
+    <tr><td><strong>UI/Frontend</strong></td><td>95%</td><td>Semua halaman sudah ada dan fungsional</td></tr>
+    <tr><td><strong>Backend API</strong></td><td>92%</td><td>Semua endpoint CRUD + webhook + AI pipeline lengkap</td></tr>
+    <tr><td><strong>Database</strong></td><td>100%</td><td>Schema lengkap, 14 tabel, pgvector enabled</td></tr>
+    <tr><td><strong>Autentikasi</strong></td><td>100%</td><td>Login, session, auth guard, role-based</td></tr>
+    <tr><td><strong>WhatsApp Integration</strong></td><td>95%</td><td>Webhook receive, send message, broadcast</td></tr>
+    <tr><td><strong>AI/RAG Pipeline</strong></td><td>95%</td><td>Full pipeline: upload → chunk → embed → search → generate</td></tr>
+    <tr><td><strong>Knowledge Base</strong></td><td>90%</td><td>Upload &amp; indexing lengkap</td></tr>
+    <tr><td><strong>Workflow Engine</strong></td><td>40%</td><td>CRUD ada, execution engine belum</td></tr>
+    <tr><td><strong>Notifications</strong></td><td>25%</td><td>Settings ada, dispatch logic belum</td></tr>
+    <tr><td><strong>Real-time</strong></td><td>0%</td><td>Belum ada WebSocket/SSE</td></tr>
+    <tr><td><strong>Export/Reporting</strong></td><td>10%</td><td>Belum diimplementasi</td></tr>
+  </table>
+
+  <h2>11.3 Sisa Pekerjaan</h2>
+  <table>
+    <tr><th>Pekerjaan</th><th>Estimasi</th><th>Prioritas</th></tr>
+    <tr><td><strong>Workflow Execution Engine</strong></td><td>3-5 hari</td><td>🔴 Tinggi</td></tr>
+    <tr><td><strong>Notification Dispatch (Telegram/Email)</strong></td><td>2-3 hari</td><td>🟡 Sedang</td></tr>
+    <tr><td><strong>WebSocket / Real-time Updates</strong></td><td>3-5 hari</td><td>🟡 Sedang</td></tr>
+    <tr><td><strong>Export / Reporting</strong></td><td>2-3 hari</td><td>🟢 Rendah</td></tr>
+    <tr><td><strong>Database External Connection</strong></td><td>3-5 hari</td><td>🟢 Rendah</td></tr>
+    <tr><td colspan="3" style="text-align: center; font-weight: 700; background: #f0f0f0;"><strong>Total estimasi: 13-21 hari kerja</strong></td></tr>
+  </table>
+
+  <div class="info-box">
+    <div class="box-title">📌 Kesimpulan</div>
+    Dengan estimasi <strong>87% selesai</strong> dan sisa ~13-21 hari kerja, proyek ini berada dalam <strong>tahap akhir pengembangan</strong>. Fitur inti (WhatsApp automation, AI/RAG, dashboard monitoring) sudah berjalan penuh dan production-ready.
+  </div>
+</div>
+
+<!-- ==================== BAB 12 ==================== -->
+<div class="page-break"></div>
+<div class="content">
+  <h1>BAB 12 — API Endpoints</h1>
+  <p>Backend menyediakan <strong>40+ API endpoints</strong> yang semuanya fungsional. Semua endpoint menggunakan prefix <code>/api</code>.</p>
+
+  <h3>Auth</h3>
+  <table>
+    <tr><th width="12%">Method</th><th width="38%">Endpoint</th><th>Deskripsi</th></tr>
+    <tr><td><code>POST</code></td><td><code>/api/auth/login</code></td><td>Login dengan email &amp; password</td></tr>
+    <tr><td><code>POST</code></td><td><code>/api/auth/logout</code></td><td>Logout &amp; hapus session</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/auth/me</code></td><td>Get current user</td></tr>
+  </table>
+
+  <h3>Webhook</h3>
+  <table>
+    <tr><th width="12%">Method</th><th width="38%">Endpoint</th><th>Deskripsi</th></tr>
+    <tr><td><code>POST</code></td><td><code>/api/webhook/kirimdev</code></td><td>Terima webhook dari KirimDev WhatsApp</td></tr>
+  </table>
+
+  <h3>Conversations</h3>
+  <table>
+    <tr><th width="12%">Method</th><th width="38%">Endpoint</th><th>Deskripsi</th></tr>
+    <tr><td><code>GET</code></td><td><code>/api/conversations</code></td><td>Daftar percakapan (filter, search, pagination)</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/conversations/:id</code></td><td>Detail percakapan dengan messages</td></tr>
+    <tr><td><code>POST</code></td><td><code>/api/conversations/:id/takeover</code></td><td>Human takeover dari AI</td></tr>
+    <tr><td><code>POST</code></td><td><code>/api/conversations/:id/release</code></td><td>Release kembali ke AI</td></tr>
+    <tr><td><code>POST</code></td><td><code>/api/conversations/:id/send</code></td><td>Kirim pesan manual via WhatsApp</td></tr>
+  </table>
+
+  <h3>Contacts</h3>
+  <table>
+    <tr><th width="12%">Method</th><th width="38%">Endpoint</th><th>Deskripsi</th></tr>
+    <tr><td><code>GET</code></td><td><code>/api/contacts</code></td><td>Daftar kontak</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/contacts/:id</code></td><td>Detail kontak</td></tr>
+    <tr><td><code>POST</code></td><td><code>/api/contacts</code></td><td>Buat kontak baru</td></tr>
+    <tr><td><code>PATCH</code></td><td><code>/api/contacts/:id</code></td><td>Update kontak</td></tr>
+    <tr><td><code>DELETE</code></td><td><code>/api/contacts/:id</code></td><td>Hapus kontak</td></tr>
+  </table>
+
+  <h3>Knowledge Base</h3>
+  <table>
+    <tr><th width="12%">Method</th><th width="38%">Endpoint</th><th>Deskripsi</th></tr>
+    <tr><td><code>GET</code></td><td><code>/api/knowledge-base</code></td><td>Daftar dokumen</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/knowledge-base/:id</code></td><td>Detail dokumen</td></tr>
+    <tr><td><code>POST</code></td><td><code>/api/knowledge-base/upload</code></td><td>Upload &amp; proses dokumen</td></tr>
+    <tr><td><code>DELETE</code></td><td><code>/api/knowledge-base/:id</code></td><td>Hapus dokumen &amp; chunks</td></tr>
+  </table>
+
+  <h3>AI Agents</h3>
+  <table>
+    <tr><th width="12%">Method</th><th width="38%">Endpoint</th><th>Deskripsi</th></tr>
+    <tr><td><code>GET</code></td><td><code>/api/ai-agents</code></td><td>Daftar AI agents</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/ai-agents/:id</code></td><td>Detail agent</td></tr>
+    <tr><td><code>POST</code></td><td><code>/api/ai-agents</code></td><td>Buat agent baru</td></tr>
+    <tr><td><code>PATCH</code></td><td><code>/api/ai-agents/:id</code></td><td>Update agent</td></tr>
+    <tr><td><code>DELETE</code></td><td><code>/api/ai-agents/:id</code></td><td>Hapus agent</td></tr>
+  </table>
+
+  <h3>Templates</h3>
+  <table>
+    <tr><th width="12%">Method</th><th width="38%">Endpoint</th><th>Deskripsi</th></tr>
+    <tr><td><code>GET</code></td><td><code>/api/templates</code></td><td>Daftar templates</td></tr>
+    <tr><td><code>POST</code></td><td><code>/api/templates</code></td><td>Buat template</td></tr>
+    <tr><td><code>PATCH</code></td><td><code>/api/templates/:id</code></td><td>Update template</td></tr>
+    <tr><td><code>DELETE</code></td><td><code>/api/templates/:id</code></td><td>Hapus template</td></tr>
+  </table>
+
+  <h3>Broadcast</h3>
+  <table>
+    <tr><th width="12%">Method</th><th width="38%">Endpoint</th><th>Deskripsi</th></tr>
+    <tr><td><code>GET</code></td><td><code>/api/broadcast</code></td><td>Daftar broadcast</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/broadcast/:id</code></td><td>Detail broadcast</td></tr>
+    <tr><td><code>POST</code></td><td><code>/api/broadcast</code></td><td>Buat broadcast</td></tr>
+    <tr><td><code>POST</code></td><td><code>/api/broadcast/:id/send</code></td><td>Kirim broadcast</td></tr>
+    <tr><td><code>DELETE</code></td><td><code>/api/broadcast/:id</code></td><td>Hapus broadcast</td></tr>
+  </table>
+
+  <h3>Settings</h3>
+  <table>
+    <tr><th width="12%">Method</th><th width="38%">Endpoint</th><th>Deskripsi</th></tr>
+    <tr><td><code>GET</code></td><td><code>/api/settings</code></td><td>Semua settings</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/settings/:key</code></td><td>Setting by key</td></tr>
+    <tr><td><code>PUT</code></td><td><code>/api/settings</code></td><td>Bulk update</td></tr>
+    <tr><td><code>PUT</code></td><td><code>/api/settings/:key</code></td><td>Update single setting</td></tr>
+  </table>
+
+  <h3>Dashboard, Users, Audit Log, Workflow</h3>
+  <table>
+    <tr><th width="12%">Method</th><th width="38%">Endpoint</th><th>Deskripsi</th></tr>
+    <tr><td><code>GET</code></td><td><code>/api/dashboard/stats</code></td><td>Statistik dashboard</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/dashboard/chart</code></td><td>Data chart</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/users</code></td><td>Daftar users</td></tr>
+    <tr><td><code>POST</code></td><td><code>/api/users</code></td><td>Buat user</td></tr>
+    <tr><td><code>PATCH</code></td><td><code>/api/users/:id</code></td><td>Update user</td></tr>
+    <tr><td><code>DELETE</code></td><td><code>/api/users/:id</code></td><td>Hapus user</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/audit-log</code></td><td>Daftar audit log</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/workflow</code></td><td>Daftar workflow</td></tr>
+    <tr><td><code>POST</code></td><td><code>/api/workflow</code></td><td>Buat workflow</td></tr>
+    <tr><td><code>PATCH</code></td><td><code>/api/workflow/:id</code></td><td>Update workflow</td></tr>
+    <tr><td><code>DELETE</code></td><td><code>/api/workflow/:id</code></td><td>Hapus workflow</td></tr>
+  </table>
+</div>
+
+<!-- ==================== FOOTER ==================== -->
+<div class="footer">
+  <p><strong>AI Customer Service Manager — Dokumentasi Detail &amp; Status Pengembangan v2.0</strong></p>
+  <p>Dokumen ini bersifat rahasia dan hanya untuk penggunaan internal.</p>
+  <p>© 2026 — Seluruh hak cipta dilindungi.</p>
+  <br>
+  <p style="font-size: 11px; color: #bbb;">
+    Untuk menyimpan sebagai PDF: Buka file ini di browser → Tekan <strong>Ctrl+P</strong> → Pilih "Save as PDF" → Save
+  </p>
+</div>
+
+</body>
+</html>

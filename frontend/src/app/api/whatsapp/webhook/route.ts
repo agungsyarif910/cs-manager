@@ -65,7 +65,9 @@ function buildHumanLikePrompt(basePrompt: string, agent?: any): string {
   [REGISTRATION:{"name":"Nama Lengkap","phone":"08xxxx","program":"Nama Program"}]
 - Tag ini TIDAK akan terlihat oleh customer, jadi tulis pesan konfirmasi seperti biasa LALU tambahkan tag di baris terakhir
 - Jangan minta data yang sudah diberikan sebelumnya di chat
-- HANYA output tag [REGISTRATION:...] SATU KALI saat data pertama kali lengkap`;
+- HANYA output tag [REGISTRATION:...] SATU KALI saat data pertama kali lengkap
+- Setelah registrasi dicatat, JANGAN kirim info pembayaran di pesanmu karena sistem akan mengirim detail pembayaran secara OTOMATIS dalam pesan terpisah
+- Cukup konfirmasi bahwa pendaftaran sudah dicatat dan info pembayaran akan segera menyusul`;
 
   return prompt;
 }
@@ -315,6 +317,7 @@ export async function POST(request: NextRequest) {
     }
 
     // ========== DETECT REGISTRATION FROM AI REPLY ==========
+    let registrationData: any = null;
     const regMatch = aiReply.match(/\[REGISTRATION:\s*(\{[\s\S]*?\})\]/);
     if (regMatch) {
       try {
@@ -327,7 +330,7 @@ export async function POST(request: NextRequest) {
           const deadline = new Date();
           deadline.setHours(deadline.getHours() + deadlineHours);
 
-          await prisma.registration.create({
+          const newReg = await prisma.registration.create({
             data: {
               companyId,
               contactId: dbContact.id,
@@ -339,6 +342,13 @@ export async function POST(request: NextRequest) {
               paymentDeadline: deadline,
             },
           });
+          registrationData = {
+            id: newReg.id,
+            name: regData.name,
+            phone: regData.phone,
+            program: regData.program,
+            deadline,
+          };
           console.log(`[Registration] Saved: ${regData.name} - ${regData.program}`);
         }
       } catch (err: any) {
@@ -369,6 +379,141 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify({ messaging_product: 'whatsapp', to: phone, type: 'text', text: { body: aiReply } })
       });
     } catch (err: any) { console.error('Send Error:', err.message); }
+
+    // ========== SEND PAYMENT NOTIFICATION AFTER REGISTRATION ==========
+    if (registrationData) {
+      try {
+        // Natural delay before sending payment info
+        await sleep(3000);
+
+        // Search knowledge base for payment/program info
+        let paymentContext = '';
+        try {
+          const programKeywords = registrationData.program.toLowerCase().split(/\s+/).filter((w: string) => w.length > 2);
+          const paymentKeywords = [...programKeywords, 'bayar', 'pembayaran', 'harga', 'biaya', 'transfer', 'rekening', 'bank'];
+
+          const chunks = await prisma.documentChunk.findMany({
+            where: {
+              document: { companyId },
+              OR: paymentKeywords.map((kw: string) => ({
+                content: { contains: kw, mode: 'insensitive' as any }
+              }))
+            },
+            take: 8,
+            orderBy: { chunkIndex: 'asc' }
+          });
+
+          if (chunks.length > 0) {
+            paymentContext = chunks.map((c: any) => c.content).join('\n---\n');
+          }
+        } catch (kbErr: any) {
+          console.error('[Payment] KB search error:', kbErr.message);
+        }
+
+        // Format deadline in Indonesian
+        const deadlineFormatted = registrationData.deadline.toLocaleString('id-ID', {
+          timeZone: 'Asia/Jakarta',
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        // Generate payment notification via AI
+        let paymentMessage = `Berikut info pembayaran untuk program ${registrationData.program}:\n\n⏰ Batas pembayaran: ${deadlineFormatted} WIB\n\nSilakan hubungi admin untuk info lebih lanjut mengenai pembayaran. Terima kasih! 🙏`;
+
+        if (aiProvider) {
+          try {
+            const paymentPrompt = `Kamu adalah CS yang mengirimkan info pembayaran ke customer yang baru mendaftar program.
+
+Data Registrasi:
+- Nama: ${registrationData.name}
+- Program: ${registrationData.program}
+- Batas Pembayaran: ${deadlineFormatted} WIB (maksimal 1 hari dari sekarang)
+
+${paymentContext ? `Info dari Knowledge Base tentang program/pembayaran:\n${paymentContext}` : 'Tidak ada info pembayaran spesifik di knowledge base.'}
+
+TUGAS:
+- Buat pesan WhatsApp berisi info pembayaran untuk program yang didaftarkan
+- Sebutkan: nama program, biaya (jika ada di knowledge base), cara pembayaran/transfer (jika ada di knowledge base), dan batas waktu pembayaran
+- Jika info biaya/rekening ada di knowledge base, WAJIB sertakan secara lengkap dan akurat
+- Jika tidak ada info biaya di knowledge base, sampaikan bahwa detail pembayaran akan diinfokan oleh admin
+- Batas pembayaran: ${deadlineFormatted} WIB
+- Tulis seperti chat WhatsApp biasa, ramah, gunakan 1-2 emoji
+- Jangan gunakan format markdown (**, ##, dll)
+- Jangan menyebut diri sebagai AI/bot
+- Akhiri dengan ajakan untuk mengirim bukti transfer setelah pembayaran`;
+
+            const paymentAiRes = await fetch(`${aiProvider.baseUrl}/chat/completions`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${aiProvider.apiKeyEncrypted}`
+              },
+              body: JSON.stringify({
+                model: aiProvider.model,
+                messages: [{ role: 'system', content: paymentPrompt }],
+                max_tokens: 500,
+                temperature: 0.6
+              })
+            });
+
+            const paymentAiData = await paymentAiRes.json() as any;
+            if (paymentAiData.choices?.[0]?.message?.content) {
+              paymentMessage = paymentAiData.choices[0].message.content;
+            }
+          } catch (aiErr: any) {
+            console.error('[Payment] AI generation error:', aiErr.message);
+          }
+        }
+
+        // Human-like typing delay
+        const paymentTypingDelay = calculateTypingDelay(paymentMessage);
+        await sendTypingIndicator(waConfig, phone, Math.ceil(paymentTypingDelay / 1000));
+        await sleep(paymentTypingDelay);
+
+        // Save payment notification message
+        await prisma.message.create({
+          data: {
+            conversationId: conversation.id,
+            direction: 'OUTBOUND',
+            type: 'TEXT',
+            content: paymentMessage,
+            deliveryStatus: 'PENDING',
+            isFromAi: true,
+            metadata: { isPaymentNotification: true, registrationId: registrationData.id, registrationProgram: registrationData.program },
+            sentAt: new Date()
+          }
+        });
+
+        // Send payment info via WhatsApp
+        await fetch(`${waConfig.apiBaseUrl}/${waConfig.phoneNumberId}/messages`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${waConfig.apiKeyEncrypted}`
+          },
+          body: JSON.stringify({
+            messaging_product: 'whatsapp',
+            to: phone,
+            type: 'text',
+            text: { body: paymentMessage }
+          })
+        });
+
+        // Update registration status to WAITING_PAYMENT
+        await prisma.registration.update({
+          where: { id: registrationData.id },
+          data: { status: 'WAITING_PAYMENT' }
+        });
+
+        console.log(`[Payment] Sent payment info to ${registrationData.name} for program: ${registrationData.program}`);
+      } catch (payErr: any) {
+        console.error('[Payment] Notification error:', payErr.message);
+      }
+    }
 
     // ========== PROCESS PENDING FOLLOW-UPS ==========
     processFollowUps(companyId).catch(err => console.error('[Follow-Up] Background error:', err));
@@ -529,7 +674,130 @@ Aturan:
   }
 }
 
-export async function GET() {
-  return NextResponse.json({ status: 'ok', message: 'Webhook active' });
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const companyId = searchParams.get('companyId');
+
+  if (!companyId) {
+    return NextResponse.json({ status: 'ok', message: 'Webhook active. Add ?companyId=xxx to run diagnostics.' });
+  }
+
+  // ========== DIAGNOSTIC MODE ==========
+  try {
+    const waConfig = await prisma.whatsAppConfig.findFirst({ where: { companyId } });
+    const aiProvider = await prisma.aiProvider.findFirst({ where: { companyId } });
+    const aiAgent = await prisma.aiAgent.findFirst({ where: { companyId } });
+    const handlerSetting = await prisma.setting.findFirst({ where: { companyId, key: 'handler_mode' } });
+    const globalMode = (handlerSetting?.value as any)?.mode || 'AI';
+
+    // Check recent conversations
+    const recentConversations = await prisma.conversation.findMany({
+      where: { companyId },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      include: { contact: { select: { phone: true, name: true } } }
+    });
+
+    // Check recent messages
+    const recentMessages = await prisma.message.findMany({
+      where: { conversation: { companyId } },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      select: { id: true, direction: true, content: true, isFromAi: true, createdAt: true, deliveryStatus: true }
+    });
+
+    const issues: string[] = [];
+
+    // Check WhatsApp Config
+    if (!waConfig) {
+      issues.push('❌ WhatsAppConfig TIDAK DITEMUKAN untuk companyId ini');
+    } else if (!waConfig.isActive) {
+      issues.push('❌ WhatsAppConfig TIDAK AKTIF (isActive = false) — aktifkan di dashboard Settings > WhatsApp');
+    }
+
+    // Check AI Provider
+    if (!aiProvider) {
+      issues.push('⚠️ AiProvider TIDAK DITEMUKAN — AI akan pakai fallback message saja');
+    } else if (!aiProvider.isActive) {
+      issues.push('⚠️ AiProvider TIDAK AKTIF (isActive = false) — AI tidak akan generate jawaban cerdas');
+    }
+
+    // Check AI Agent
+    if (!aiAgent) {
+      issues.push('⚠️ AiAgent TIDAK DITEMUKAN — akan pakai default prompt');
+    } else if (!aiAgent.isActive) {
+      issues.push('⚠️ AiAgent TIDAK AKTIF (isActive = false)');
+    }
+
+    // Check handler mode
+    if (globalMode === 'HUMAN') {
+      issues.push('❌ Handler Mode = HUMAN — AI TIDAK akan membalas pesan! Ubah ke AI di dashboard Settings');
+    }
+
+    // Check stuck conversations
+    const humanConvs = recentConversations.filter(c => c.handlerType === 'HUMAN' || c.status === 'HUMAN_HANDLING');
+    if (humanConvs.length > 0) {
+      issues.push(`⚠️ ${humanConvs.length} percakapan terakhir dalam mode HUMAN_HANDLING — AI tidak membalas percakapan ini`);
+    }
+
+    // Check assigned conversations
+    const assignedConvs = recentConversations.filter(c => c.assignedUserId);
+    if (assignedConvs.length > 0 && globalMode === 'AI') {
+      issues.push(`⚠️ ${assignedConvs.length} percakapan masih di-assign ke user — tidak akan auto-switch ke AI meskipun mode global = AI`);
+    }
+
+    const diagnostic = {
+      status: issues.length === 0 ? '✅ ALL OK' : `⚠️ ${issues.length} ISSUE(S) FOUND`,
+      issues,
+      config: {
+        whatsapp: waConfig ? {
+          id: waConfig.id,
+          name: waConfig.name,
+          isActive: waConfig.isActive,
+          apiBaseUrl: waConfig.apiBaseUrl,
+          phoneNumber: waConfig.phoneNumber,
+          phoneNumberId: waConfig.phoneNumberId,
+          hasApiKey: !!waConfig.apiKeyEncrypted,
+          hasWebhookSecret: !!waConfig.webhookSecret,
+        } : null,
+        aiProvider: aiProvider ? {
+          id: aiProvider.id,
+          name: aiProvider.name,
+          isActive: aiProvider.isActive,
+          baseUrl: aiProvider.baseUrl,
+          model: aiProvider.model,
+          hasApiKey: !!aiProvider.apiKeyEncrypted,
+        } : null,
+        aiAgent: aiAgent ? {
+          id: aiAgent.id,
+          name: aiAgent.name,
+          isActive: aiAgent.isActive,
+          hasSystemPrompt: !!aiAgent.systemPrompt,
+          language: aiAgent.language,
+        } : null,
+        globalHandlerMode: globalMode,
+      },
+      recentConversations: recentConversations.map(c => ({
+        id: c.id,
+        contact: c.contact?.name || c.contact?.phone,
+        status: c.status,
+        handlerType: c.handlerType,
+        assignedUserId: c.assignedUserId,
+        createdAt: c.createdAt,
+      })),
+      recentMessages: recentMessages.map(m => ({
+        id: m.id,
+        direction: m.direction,
+        content: (m.content || '').slice(0, 80) + ((m.content || '').length > 80 ? '...' : ''),
+        isFromAi: m.isFromAi,
+        deliveryStatus: m.deliveryStatus,
+        createdAt: m.createdAt,
+      })),
+    };
+
+    return NextResponse.json(diagnostic, { status: 200 });
+  } catch (err: any) {
+    return NextResponse.json({ status: 'error', message: err.message }, { status: 500 });
+  }
 }
 

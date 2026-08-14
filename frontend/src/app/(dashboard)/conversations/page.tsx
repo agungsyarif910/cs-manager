@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, ArrowLeft, Bot, User, Clock, MessageSquare, RefreshCw, ArrowUpDown, Eye, ChevronRight } from "lucide-react";
+import { Search, ArrowLeft, Bot, User, Clock, MessageSquare, RefreshCw, ArrowUpDown, Eye, ChevronRight, Trash2, CheckSquare, Square, MinusSquare } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import api from "@/lib/api";
 
@@ -50,6 +50,11 @@ export default function ConversationsPage() {
   const [syncResult, setSyncResult] = useState("");
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
+  // Selection state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   useEffect(() => {
     loadConversations();
   }, []);
@@ -63,6 +68,7 @@ export default function ConversationsPage() {
       console.error("Failed to load conversations:", err);
     }
     setLoading(false);
+    setSelectedIds(new Set());
   };
 
   const syncContacts = async () => {
@@ -88,6 +94,42 @@ export default function ConversationsPage() {
     setLoadingDetail(false);
   };
 
+  // ===== Selection Handlers =====
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map(c => c.id)));
+    }
+  };
+
+  const deleteSelected = async () => {
+    if (selectedIds.size === 0) return;
+    setDeleting(true);
+    try {
+      await api.delete("/conversations", { data: { ids: Array.from(selectedIds) } });
+      setConversations(prev => prev.filter(c => !selectedIds.has(c.id)));
+      setSelectedIds(new Set());
+      setShowDeleteConfirm(false);
+    } catch (err: any) {
+      console.error("Failed to delete:", err);
+      alert(`Gagal menghapus: ${err.response?.data?.message || err.message}`);
+    }
+    setDeleting(false);
+  };
+
   const filtered = conversations.filter(c =>
     c.customer.toLowerCase().includes(search.toLowerCase()) ||
     c.phone.includes(search)
@@ -103,6 +145,9 @@ export default function ConversationsPage() {
     if (!date) return '';
     return new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
   };
+
+  const isAllSelected = filtered.length > 0 && selectedIds.size === filtered.length;
+  const isSomeSelected = selectedIds.size > 0 && selectedIds.size < filtered.length;
 
   // Chat Detail View
   if (selected) {
@@ -215,7 +260,7 @@ export default function ConversationsPage() {
         </p>
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -231,17 +276,90 @@ export default function ConversationsPage() {
           <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
           {syncing ? 'Syncing...' : 'Sync ke Kontak'}
         </Button>
+
+        {/* Delete Selected Button */}
+        {selectedIds.size > 0 && (
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setShowDeleteConfirm(true)}
+            className="gap-1.5 ml-auto"
+          >
+            <Trash2 className="h-4 w-4" />
+            Hapus {selectedIds.size} percakapan
+          </Button>
+        )}
       </div>
+
       {syncResult && (
         <p className={`text-sm px-1 ${syncResult.startsWith('✅') ? 'text-emerald-500' : 'text-red-500'}`}>
           {syncResult}
         </p>
       )}
 
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-card border border-border rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-10 w-10 rounded-full bg-red-500/10 flex items-center justify-center">
+                <Trash2 className="h-5 w-5 text-red-500" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">Hapus Percakapan</h3>
+                <p className="text-sm text-muted-foreground">Tindakan ini tidak bisa dibatalkan</p>
+              </div>
+            </div>
+            <p className="text-sm mb-6">
+              Anda akan menghapus <strong className="text-red-400">{selectedIds.size} percakapan</strong> beserta semua pesan di dalamnya. Yakin ingin melanjutkan?
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" size="sm" onClick={() => setShowDeleteConfirm(false)} disabled={deleting}>
+                Batal
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={deleteSelected}
+                disabled={deleting}
+                className="gap-1.5"
+              >
+                {deleting ? (
+                  <>
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                    Menghapus...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Ya, Hapus
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="rounded-md border bg-card glass">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">
+                <button
+                  onClick={toggleSelectAll}
+                  className="flex items-center justify-center p-1 rounded hover:bg-muted/50 transition-colors"
+                  title={isAllSelected ? 'Batal pilih semua' : 'Pilih semua'}
+                >
+                  {isAllSelected ? (
+                    <CheckSquare className="h-4 w-4 text-primary" />
+                  ) : isSomeSelected ? (
+                    <MinusSquare className="h-4 w-4 text-primary/60" />
+                  ) : (
+                    <Square className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </button>
+              </TableHead>
               <TableHead>Customer</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead>Status</TableHead>
@@ -255,52 +373,93 @@ export default function ConversationsPage() {
             {loading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
+                  <TableCell><Skeleton className="h-4 w-4" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-[120px]" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-[60px]" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-[50px]" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-[200px]" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
+                  <TableCell></TableCell>
                 </TableRow>
               ))
             ) : filtered.length > 0 ? (
-              filtered.map((conv) => (
-                <TableRow
-                  key={conv.id}
-                  className="cursor-pointer hover:bg-muted/50 group transition-colors"
-                  onClick={() => openConversation(conv.id)}
-                >
-                  <TableCell className="font-medium">{conv.customer}</TableCell>
-                  <TableCell>{conv.phone}</TableCell>
-                  <TableCell>
-                    <Badge variant={conv.status === 'AI_HANDLING' || conv.status === 'ACTIVE' ? 'default' : 'secondary'}>
-                      {conv.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={conv.handlerType === 'AI' ? 'text-emerald-400 border-emerald-500/30' : ''}>
-                      {conv.handlerType}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="truncate max-w-[200px] text-muted-foreground">
-                    {conv.lastMessage}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    <div className="flex items-center justify-between">
-                      <span>{formatDate(conv.createdAt)}</span>
-                      <span className="hidden group-hover:inline-flex items-center gap-1 text-xs text-primary ml-2">
-                        <Eye className="h-3 w-3" /> Lihat detail
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="w-8 pr-2">
-                    <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary transition-colors" />
-                  </TableCell>
-                </TableRow>
-              ))
+              filtered.map((conv) => {
+                const isChecked = selectedIds.has(conv.id);
+                return (
+                  <TableRow
+                    key={conv.id}
+                    className={`group transition-colors ${isChecked ? 'bg-primary/5 hover:bg-primary/10' : 'hover:bg-muted/50'}`}
+                  >
+                    <TableCell className="w-12" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => toggleSelect(conv.id)}
+                        className="flex items-center justify-center p-1 rounded hover:bg-muted/50 transition-colors"
+                      >
+                        {isChecked ? (
+                          <CheckSquare className="h-4 w-4 text-primary" />
+                        ) : (
+                          <Square className="h-4 w-4 text-muted-foreground group-hover:text-foreground/60" />
+                        )}
+                      </button>
+                    </TableCell>
+                    <TableCell
+                      className="font-medium cursor-pointer"
+                      onClick={() => openConversation(conv.id)}
+                    >
+                      {conv.customer}
+                    </TableCell>
+                    <TableCell
+                      className="cursor-pointer"
+                      onClick={() => openConversation(conv.id)}
+                    >
+                      {conv.phone}
+                    </TableCell>
+                    <TableCell
+                      className="cursor-pointer"
+                      onClick={() => openConversation(conv.id)}
+                    >
+                      <Badge variant={conv.status === 'AI_HANDLING' || conv.status === 'ACTIVE' ? 'default' : 'secondary'}>
+                        {conv.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell
+                      className="cursor-pointer"
+                      onClick={() => openConversation(conv.id)}
+                    >
+                      <Badge variant="outline" className={conv.handlerType === 'AI' ? 'text-emerald-400 border-emerald-500/30' : ''}>
+                        {conv.handlerType}
+                      </Badge>
+                    </TableCell>
+                    <TableCell
+                      className="truncate max-w-[200px] text-muted-foreground cursor-pointer"
+                      onClick={() => openConversation(conv.id)}
+                    >
+                      {conv.lastMessage}
+                    </TableCell>
+                    <TableCell
+                      className="text-sm text-muted-foreground cursor-pointer"
+                      onClick={() => openConversation(conv.id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span>{formatDate(conv.createdAt)}</span>
+                        <span className="hidden group-hover:inline-flex items-center gap-1 text-xs text-primary ml-2">
+                          <Eye className="h-3 w-3" /> Lihat detail
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell
+                      className="w-8 pr-2 cursor-pointer"
+                      onClick={() => openConversation(conv.id)}
+                    >
+                      <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary transition-colors" />
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
                   {search ? 'Tidak ada hasil' : 'Belum ada percakapan'}
                 </TableCell>
               </TableRow>
@@ -308,6 +467,33 @@ export default function ConversationsPage() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Selection Info Bar */}
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-card border border-border rounded-full px-6 py-3 shadow-2xl flex items-center gap-4">
+          <span className="text-sm font-medium">
+            {selectedIds.size} dipilih
+          </span>
+          <div className="h-4 w-px bg-border"></div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSelectedIds(new Set())}
+            className="text-xs h-7"
+          >
+            Batal
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setShowDeleteConfirm(true)}
+            className="gap-1.5 h-7"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Hapus
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
