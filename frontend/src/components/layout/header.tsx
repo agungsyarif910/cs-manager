@@ -102,17 +102,25 @@ export function Header() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  const [searchError, setSearchError] = useState("");
+
   // Debounced search
   const doSearch = useCallback(async (q: string) => {
     if (q.length < 2) {
       setSearchResults({ contacts: [], conversations: [] });
+      setSearchError("");
       return;
     }
     setSearching(true);
+    setSearchError("");
     try {
       const res = await api.get(`/search?q=${encodeURIComponent(q)}`);
       setSearchResults(res.data);
-    } catch {}
+      if (res.data.error) setSearchError(res.data.error);
+    } catch (err: any) {
+      console.error("Search failed:", err);
+      setSearchError(err.response?.data?.message || err.message || "Search gagal");
+    }
     setSearching(false);
   }, []);
 
@@ -289,6 +297,11 @@ export function Header() {
                 <div className="px-4 py-8 text-center text-sm text-muted-foreground">
                   <Search className="h-8 w-8 mx-auto mb-2 opacity-30" />
                   Tidak ditemukan hasil untuk "{searchQuery}"
+                  {searchError && (
+                    <p className="mt-2 text-xs text-red-400 bg-red-500/10 rounded px-3 py-1.5 mx-4">
+                      Error: {searchError}
+                    </p>
+                  )}
                 </div>
               )}
 
