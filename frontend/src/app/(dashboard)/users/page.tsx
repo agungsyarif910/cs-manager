@@ -398,15 +398,22 @@ export default function UsersPage() {
 
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Role</label>
-                <select
-                  value={formRole}
-                  onChange={e => setFormRole(e.target.value)}
-                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-                >
-                  {ROLES_FOR_ADD.map(r => (
-                    <option key={r} value={r}>{r}</option>
-                  ))}
-                </select>
+                {dialogMode === 'edit' && editingUser?.role === 'OWNER' ? (
+                  <div className="w-full rounded-md border border-border bg-muted/50 px-3 py-2 text-sm text-muted-foreground cursor-not-allowed flex items-center justify-between">
+                    <span>OWNER</span>
+                    <span className="text-xs">🔒 Tidak bisa diubah</span>
+                  </div>
+                ) : (
+                  <select
+                    value={formRole}
+                    onChange={e => setFormRole(e.target.value)}
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  >
+                    {ROLES_FOR_ADD.map(r => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               {dialogMode === 'edit' && (
