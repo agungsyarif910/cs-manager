@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Bell, Search, Sun, Moon, Menu, MessageSquare, X, User, Phone, Mail } from "lucide-react";
+import { Bell, Search, Sun, Moon, Menu, MessageSquare, X, User, Phone, Mail, Settings } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -248,13 +248,20 @@ export function Header() {
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuContent align="end" className="w-56">
+              <div className="px-2 py-2 border-b mb-1">
+                <p className="text-sm font-medium">{user?.name || 'User'}</p>
+                <p className="text-xs text-muted-foreground">{user?.email || ''}</p>
+                <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded mt-1 inline-block">{user?.role || 'USER'}</span>
+              </div>
+              <DropdownMenuItem onClick={() => router.push('/settings')} className="cursor-pointer">
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => { 
                 toast.success("Sampai jumpa! 👋", { description: "Anda telah berhasil keluar." });
                 setTimeout(() => { logout(); window.location.href = '/login'; }, 800);
-              }} className="text-destructive">
+              }} className="text-destructive cursor-pointer">
                 Log out
               </DropdownMenuItem>
             </DropdownMenuContent>
