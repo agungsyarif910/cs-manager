@@ -19,6 +19,24 @@ export async function POST(request: NextRequest) {
 
     await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
 
+    // Record LOGIN audit log
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || 'unknown';
+    const userAgent = request.headers.get('user-agent') || '';
+
+    await prisma.auditLog.create({
+      data: {
+        userId: user.id,
+        companyId: user.companyId,
+        action: 'LOGIN',
+        resource: 'Auth',
+        details: { email: user.email, role: user.role },
+        ipAddress: ip,
+        userAgent,
+      }
+    });
+
     return NextResponse.json({
       accessToken,
       user: { id: user.id, name: user.name, email: user.email, role: user.role, companyId: user.companyId }
