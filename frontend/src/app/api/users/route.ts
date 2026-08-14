@@ -35,7 +35,15 @@ export async function POST(request: NextRequest) {
   if (!user) return unauthorized();
 
   try {
+    if (user.role !== 'OWNER') {
+      return NextResponse.json({ message: 'Hanya Owner yang bisa menambah user' }, { status: 403 });
+    }
+
     const { name, email, password, role } = await request.json();
+
+    if (role === 'OWNER') {
+      return NextResponse.json({ message: 'Tidak bisa menambah user dengan role Owner' }, { status: 400 });
+    }
 
     if (!name || !email || !password) {
       return NextResponse.json({ message: 'Name, email, dan password wajib diisi' }, { status: 400 });
@@ -79,6 +87,10 @@ export async function PATCH(request: NextRequest) {
   if (!user) return unauthorized();
 
   try {
+    if (user.role !== 'OWNER') {
+      return NextResponse.json({ message: 'Hanya Owner yang bisa mengedit user' }, { status: 403 });
+    }
+
     const { id, name, email, role, isActive, password } = await request.json();
 
     if (!id) {
@@ -125,6 +137,10 @@ export async function DELETE(request: NextRequest) {
   if (!user) return unauthorized();
 
   try {
+    if (user.role !== 'OWNER') {
+      return NextResponse.json({ message: 'Hanya Owner yang bisa menghapus user' }, { status: 403 });
+    }
+
     const { id } = await request.json();
 
     if (!id) {

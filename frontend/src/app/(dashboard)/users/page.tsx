@@ -5,9 +5,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Pencil, Trash2, RefreshCw, X, Eye, EyeOff } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, X, Eye, EyeOff, ShieldAlert } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import api from "@/lib/api";
+import { useAuthStore } from "@/stores/auth-store";
 
 interface User {
   id: string;
@@ -19,7 +20,7 @@ interface User {
   createdAt: string;
 }
 
-const ROLES = ["OWNER", "SUPERVISOR", "CS", "VIEWER"];
+const ROLES_FOR_ADD = ["SUPERVISOR", "CS", "VIEWER"];
 
 function checkPasswordStrength(password: string) {
   const rules = [
@@ -38,6 +39,8 @@ function checkPasswordStrength(password: string) {
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const authUser = useAuthStore(state => state.user);
+  const isOwner = authUser?.role === 'OWNER';
 
   // Dialog state
   const [showDialog, setShowDialog] = useState(false);
@@ -191,10 +194,17 @@ export default function UsersPage() {
           <Button variant="outline" size="sm" onClick={loadUsers}>
             <RefreshCw className="h-4 w-4" />
           </Button>
-          <Button onClick={openAdd}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add User
-          </Button>
+          {isOwner ? (
+            <Button onClick={openAdd}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add User
+            </Button>
+          ) : (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-md">
+              <ShieldAlert className="h-3.5 w-3.5" />
+              Hanya Owner yang bisa kelola user
+            </div>
+          )}
         </div>
       </div>
 
@@ -241,6 +251,7 @@ export default function UsersPage() {
                     {new Date(user.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </TableCell>
                   <TableCell className="text-right">
+                    {isOwner && (
                     <div className="flex items-center justify-end gap-1">
                       <Button
                         variant="ghost"
@@ -269,6 +280,7 @@ export default function UsersPage() {
                         );
                       })()}
                     </div>
+                    )}
                   </TableCell>
                 </TableRow>
               ))
@@ -374,7 +386,7 @@ export default function UsersPage() {
                   onChange={e => setFormRole(e.target.value)}
                   className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
                 >
-                  {ROLES.map(r => (
+                  {ROLES_FOR_ADD.map(r => (
                     <option key={r} value={r}>{r}</option>
                   ))}
                 </select>
