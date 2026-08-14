@@ -30,7 +30,7 @@ const navItems = [
   { name: "Contacts", href: "/contacts", icon: Users },
   { name: "Registrations", href: "/registrations", icon: ClipboardList },
   { name: "Knowledge Base", href: "/knowledge-base", icon: BookOpen },
-  { name: "AI Agents", href: "/ai-agents", icon: Bot },
+  // AI Agents dihilangkan — sudah di-cover oleh Prompt Builder
   { name: "Workflow", href: "/workflow", icon: GitBranch },
   { name: "Templates", href: "/templates", icon: FileText },
   { name: "Broadcast", href: "/broadcast", icon: Send },
