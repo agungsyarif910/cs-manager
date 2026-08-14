@@ -29,10 +29,18 @@ function getTokenFromStorage(): string | null {
   return localStorage.getItem('access_token');
 }
 
+function getUserFromStorage(): User | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem('user');
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  token: null,
-  isAuthenticated: false,
+  user: getUserFromStorage(),
+  token: getTokenFromStorage(),
+  isAuthenticated: !!getTokenFromStorage(),
   login: (token, user) => {
     localStorage.setItem('access_token', token);
     localStorage.setItem('user', JSON.stringify(user));
