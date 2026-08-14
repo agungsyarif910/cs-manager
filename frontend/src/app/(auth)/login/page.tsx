@@ -97,9 +97,7 @@ export default async function LoginPage() {
             </p>
           </div>
           <LoginForm />
-          <p className="text-center text-xs text-muted-foreground">
-            Default: admin@example.com / admin123
-          </p>
+
         </div>
       </div>
     </div>
