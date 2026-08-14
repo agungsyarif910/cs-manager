@@ -40,7 +40,24 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const authUser = useAuthStore(state => state.user);
-  const isOwner = authUser?.role === 'OWNER';
+  const [currentRole, setCurrentRole] = useState<string>('');
+
+  useEffect(() => {
+    // Zustand store may not be hydrated on page load, fallback to localStorage
+    if (authUser?.role) {
+      setCurrentRole(authUser.role);
+    } else {
+      try {
+        const stored = localStorage.getItem('user');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          setCurrentRole(parsed.role || '');
+        }
+      } catch {}
+    }
+  }, [authUser]);
+
+  const isOwner = currentRole === 'OWNER';
 
   // Dialog state
   const [showDialog, setShowDialog] = useState(false);
