@@ -79,6 +79,14 @@ export default function UsersPage() {
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Toast notification
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
+  };
+
   useEffect(() => {
     loadUsers();
   }, []);
@@ -160,6 +168,7 @@ export default function UsersPage() {
           role: formRole,
         });
         setUsers(prev => [res.data, ...prev]);
+        showToast(`User "${formName}" berhasil ditambahkan ✅`);
       } else if (editingUser) {
         const payload: any = {
           id: editingUser.id,
@@ -172,6 +181,7 @@ export default function UsersPage() {
 
         const res = await api.patch("/users", payload);
         setUsers(prev => prev.map(u => u.id === editingUser.id ? res.data : u));
+        showToast(`User "${formName}" berhasil diperbarui ✅`);
       }
       setShowDialog(false);
     } catch (err: any) {
@@ -190,12 +200,14 @@ export default function UsersPage() {
     if (!deletingUser) return;
     setDeleting(true);
     try {
+      const deletedName = deletingUser.name;
       await api.delete("/users", { data: { id: deletingUser.id } });
       setUsers(prev => prev.filter(u => u.id !== deletingUser.id));
       setShowDeleteConfirm(false);
       setDeletingUser(null);
+      showToast(`User "${deletedName}" berhasil dihapus 🗑️`);
     } catch (err: any) {
-      alert(err.response?.data?.message || "Gagal menghapus user");
+      showToast(err.response?.data?.message || "Gagal menghapus user", 'error');
     }
     setDeleting(false);
   };
@@ -490,6 +502,19 @@ export default function UsersPage() {
               </Button>
             </div>
           </div>
+        </div>
+      )}
+      {/* ===== Toast Notification ===== */}
+      {toast && (
+        <div className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl shadow-2xl border flex items-center gap-3 animate-in slide-in-from-bottom-4 duration-300 ${
+          toast.type === 'success'
+            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+            : 'bg-red-500/10 border-red-500/30 text-red-400'
+        }`}>
+          <span className="text-sm font-medium">{toast.message}</span>
+          <button onClick={() => setToast(null)} className="ml-1 opacity-60 hover:opacity-100">
+            <X className="h-3.5 w-3.5" />
+          </button>
         </div>
       )}
     </div>
