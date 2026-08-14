@@ -111,6 +111,12 @@ export default function UsersPage() {
       return;
     }
 
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(formEmail.trim())) {
+      setFormError("Format email tidak valid (contoh: nama@domain.com)");
+      return;
+    }
+
     if (dialogMode === 'add' && !formPassword) {
       setFormError("Password wajib diisi untuk user baru");
       return;
