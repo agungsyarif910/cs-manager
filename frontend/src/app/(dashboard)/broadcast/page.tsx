@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Plus, Send, RefreshCw, X, CheckSquare, Square, Loader2, Radio } from "lucide-react";
+import { Plus, Send, RefreshCw, X, CheckSquare, Square, Loader2, Megaphone } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import api from "@/lib/api";
 
@@ -267,7 +267,7 @@ export default function BroadcastPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Radio className="h-8 w-8 text-primary" />
+            <Megaphone className="h-8 w-8 text-primary" />
             Broadcast
           </h1>
           <p className="text-muted-foreground">Kirim pesan massal ke kontak WhatsApp.</p>
