@@ -207,8 +207,8 @@ export default function ConversationsPage() {
   if (selected) {
     const isAI = selected.handlerType === 'AI';
     return (
-      <div className="space-y-4">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col h-[calc(100vh-120px)]">
+        <div className="flex items-center gap-4 mb-4 flex-shrink-0 flex-wrap">
           <Button variant="ghost" size="sm" onClick={() => setSelected(null)}>
             <ArrowLeft className="h-4 w-4 mr-2" /> Kembali
           </Button>
@@ -249,8 +249,8 @@ export default function ConversationsPage() {
           </div>
         </div>
 
-        <Card className="glass">
-          <CardHeader className="pb-2">
+        <Card className="glass flex-1 flex flex-col min-h-0">
+          <CardHeader className="pb-2 flex-shrink-0">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
@@ -267,8 +267,8 @@ export default function ConversationsPage() {
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+          <CardContent className="flex-1 overflow-hidden">
+            <div className="space-y-4 h-full overflow-y-auto pr-2">
               {loadingDetail ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className={`flex ${i % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
@@ -323,8 +323,8 @@ export default function ConversationsPage() {
           </CardContent>
         </Card>
 
-        {/* Reply Input */}
-        <div className={`rounded-xl border p-4 ${isAI ? 'bg-muted/30 opacity-60' : 'bg-card'}`}>
+        {/* Reply Input - always visible at bottom */}
+        <div className={`rounded-xl border p-4 mt-4 flex-shrink-0 ${isAI ? 'bg-muted/30' : 'bg-card'}`}>
           {isAI ? (
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground py-2">
               <Bot className="h-4 w-4" />
