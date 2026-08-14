@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
       include: {
         contact: { select: { name: true, phone: true } },
       },
-      orderBy: { updatedAt: 'desc' },
+      orderBy: { createdAt: 'desc' },
       take: 5,
     });
 
