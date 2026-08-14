@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, ArrowLeft, Bot, User, Clock, MessageSquare, RefreshCw, ArrowUpDown, Eye, ChevronRight, Trash2, CheckSquare, Square, MinusSquare } from "lucide-react";
+import { Search, ArrowLeft, Bot, User, Clock, MessageSquare, RefreshCw, ArrowUpDown, Eye, ChevronRight, Trash2, CheckSquare, Square, MinusSquare, Send, HandMetal, Undo2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import api from "@/lib/api";
 
@@ -55,6 +55,11 @@ export default function ConversationsPage() {
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  // Reply state
+  const [replyText, setReplyText] = useState("");
+  const [sending, setSending] = useState(false);
+  const [takingOver, setTakingOver] = useState(false);
+
   useEffect(() => {
     loadConversations();
   }, []);
@@ -92,6 +97,55 @@ export default function ConversationsPage() {
       console.error("Failed to load conversation:", err);
     }
     setLoadingDetail(false);
+  };
+
+  // ===== Takeover / Release =====
+  const handleTakeover = async () => {
+    if (!selected) return;
+    setTakingOver(true);
+    try {
+      await api.post("/conversations/chat", { conversationId: selected.id, action: 'takeover' });
+      setSelected({ ...selected, status: 'HUMAN_HANDLING', handlerType: 'HUMAN' });
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Gagal takeover');
+    }
+    setTakingOver(false);
+  };
+
+  const handleRelease = async () => {
+    if (!selected) return;
+    setTakingOver(true);
+    try {
+      await api.post("/conversations/chat", { conversationId: selected.id, action: 'release' });
+      setSelected({ ...selected, status: 'AI_HANDLING', handlerType: 'AI' });
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Gagal release');
+    }
+    setTakingOver(false);
+  };
+
+  // ===== Send Reply =====
+  const handleSendReply = async () => {
+    if (!selected || !replyText.trim() || sending) return;
+    setSending(true);
+    try {
+      const res = await api.post("/conversations/chat", {
+        conversationId: selected.id,
+        action: 'send',
+        message: replyText.trim(),
+      });
+      // Add the new message to the list
+      if (res.data.data) {
+        setSelected({
+          ...selected,
+          messages: [...(selected.messages || []), res.data.data],
+        });
+      }
+      setReplyText("");
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Gagal kirim pesan');
+    }
+    setSending(false);
   };
 
   // ===== Selection Handlers =====
@@ -163,6 +217,29 @@ export default function ConversationsPage() {
             <p className="text-sm text-muted-foreground">{selected.contact?.phone}</p>
           </div>
           <div className="ml-auto flex gap-2 items-center">
+            {isAI ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleTakeover}
+                disabled={takingOver}
+                className="gap-1.5 text-blue-400 border-blue-500/30 hover:bg-blue-500/10"
+              >
+                <HandMetal className="h-3.5 w-3.5" />
+                {takingOver ? 'Proses...' : 'Takeover'}
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRelease}
+                disabled={takingOver}
+                className="gap-1.5 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10"
+              >
+                <Undo2 className="h-3.5 w-3.5" />
+                {takingOver ? 'Proses...' : 'Release ke AI'}
+              </Button>
+            )}
             <Badge variant={selected.status === 'AI_HANDLING' ? 'outline' : 'default'} className={selected.status === 'AI_HANDLING' ? 'text-emerald-400 border-emerald-500/30' : selected.status === 'HUMAN_HANDLING' ? 'text-blue-400 border-blue-500/30' : ''}>
               {selected.status}
             </Badge>
@@ -245,6 +322,39 @@ export default function ConversationsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Reply Input */}
+        <div className={`rounded-xl border p-4 ${isAI ? 'bg-muted/30 opacity-60' : 'bg-card'}`}>
+          {isAI ? (
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground py-2">
+              <Bot className="h-4 w-4" />
+              <span>Mode AI aktif — klik <strong>Takeover</strong> untuk balas manual</span>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Input
+                value={replyText}
+                onChange={e => setReplyText(e.target.value)}
+                placeholder="Ketik balasan..."
+                className="flex-1"
+                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendReply(); } }}
+                disabled={sending}
+              />
+              <Button
+                onClick={handleSendReply}
+                disabled={!replyText.trim() || sending}
+                className="gap-1.5"
+              >
+                {sending ? (
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+                Kirim
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
