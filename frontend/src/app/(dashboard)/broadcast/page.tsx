@@ -62,7 +62,7 @@ export default function BroadcastPage() {
     setLoadingContacts(true);
     try {
       const res = await api.get("/contacts");
-      setContacts(res.data);
+      setContacts(res.data.data || []);
     } catch (err) {
       console.error("Failed to load contacts:", err);
     }
