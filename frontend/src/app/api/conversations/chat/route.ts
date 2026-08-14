@@ -101,12 +101,6 @@ export async function POST(request: NextRequest) {
         console.error('Send error:', err.message);
       }
 
-      // Update conversation timestamp
-      await prisma.conversation.update({
-        where: { id: conversationId },
-        data: { lastMessageAt: new Date() },
-      });
-
       return NextResponse.json({
         success: true,
         message: 'Pesan terkirim',
