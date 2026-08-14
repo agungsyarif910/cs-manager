@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Get WhatsApp config
-      const settings = await prisma.settings.findMany({
+      const settings = await prisma.setting.findMany({
         where: {
           companyId: user.companyId,
           key: { in: ['wa_api_base_url', 'wa_phone_number_id', 'wa_api_key'] }
